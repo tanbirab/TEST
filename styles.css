@@ -78,3 +78,23 @@ body{background:var(--paper);color:var(--ink)}
 .tool-card{min-height:145px;border-color:#dfd1a6;border-radius:15px;background:#fff;box-shadow:0 5px 18px #4a30200d}
 .tool-card:hover{transform:translateY(-4px);border-color:#d14836;box-shadow:0 15px 30px #4a302018}
 @media(max-width:650px){.tool-section{padding-top:32px}.section-heading h2{font-size:35px;letter-spacing:-1.5px}.tool-controls{align-items:stretch}.search-box{width:100%}.filters{justify-content:space-between;overflow-x:auto}.filter{padding:9px 10px;white-space:nowrap}}
+
+/* Cool blue glass surfaces; keep the brand red as the primary accent. */
+:root{--paper:#f2f6fc;--line:#dce6f4}
+body{background:#f2f6fc}
+.topbar{background:rgba(242,246,252,.96);backdrop-filter:blur(20px) saturate(145%);border-color:#dce6f4}
+.tool-section{background:linear-gradient(180deg,#edf4ff 0%,#f5f8fd 62%,#f2f6fc 100%)!important}
+.tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f533,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483610,transparent 32%),repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px)}
+.tool-card{background:rgba(255,255,255,.94);backdrop-filter:blur(16px) saturate(135%);border-color:#c8d7e9;box-shadow:0 6px 20px #294b7410}
+.tool-card:hover{background:rgba(255,255,255,.98);border-color:#D14836;box-shadow:0 15px 32px #294b7418}
+.tool-icon,.tool-icon.green,.tool-icon.peach,.tool-icon.lilac,.tool-icon.blue,.tool-icon.yellow,.tool-icon.rose,.tool-card:nth-child(4n + 1) .tool-icon,.tool-card:nth-child(4n + 1) .tool-icon.green,.tool-card:nth-child(4n + 1) .tool-icon.peach,.tool-card:nth-child(4n + 1) .tool-icon.lilac,.tool-card:nth-child(4n + 1) .tool-icon.blue,.tool-card:nth-child(4n + 1) .tool-icon.yellow,.tool-card:nth-child(4n + 1) .tool-icon.rose{background:#e8f0fb;color:#b8392a}
+.tool-tag{background:#edf3fb;border-color:#cbd9eb;color:#8d3025}
+.tool-count,.search-box,.filters{background:rgba(255,255,255,.95);backdrop-filter:blur(14px) saturate(130%);border-color:#cbd9eb}
+.filter.active{background:#e8f0fb;border-color:#a9bfdc;color:#8d3025}
+.filter:hover{background:#f1f6fd}
+.trust-strip{background:rgba(232,240,251,.96);border-color:#cbd9eb;backdrop-filter:blur(14px)}
+.trust-mark{background:#D14836;color:#fff}
+.lilac-bg,.peach-bg,.mint-bg,.dialog-icon,.upload-symbol,.selected-file{background:#e8f0fb;color:#a93225}
+.drop-zone{background:rgba(245,249,255,.96);border-color:#b9cce4}
+.drop-zone:hover,.drop-zone.dragover{background:#eaf2fc;border-color:#D14836}
+.arrow-circle{border-color:#c4d4e9}
