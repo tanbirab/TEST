@@ -84,6 +84,9 @@ body{background:var(--paper);color:var(--ink)}
 body{background:#f2f6fc}
 .topbar{background:rgba(242,246,252,.96);backdrop-filter:blur(20px) saturate(145%);border-color:#dce6f4}
 .tool-section{background:linear-gradient(180deg,#edf4ff 0%,#f5f8fd 62%,#f2f6fc 100%)!important}
+
+/* Continue the catalog grid behind the navigation for one seamless surface. */
+.topbar{background-color:rgba(237,244,255,.94);background-image:repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px);background-position:0 0;background-size:auto;backdrop-filter:blur(18px) saturate(135%)}
 .tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f533,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483610,transparent 32%),repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px)}
 .tool-card{background:rgba(255,255,255,.94);backdrop-filter:blur(16px) saturate(135%);border-color:#c8d7e9;box-shadow:0 6px 20px #294b7410}
 .tool-card:hover{background:rgba(255,255,255,.98);border-color:#D14836;box-shadow:0 15px 32px #294b7418}
