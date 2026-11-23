@@ -104,6 +104,14 @@ body{background-color:#edf4ff;background-image:radial-gradient(ellipse at 12% 14
 .tool-section{background:transparent!important}
 .tool-section::before{content:none!important;display:none!important}
 body{background-color:#edf4ff;background-image:radial-gradient(ellipse at 18% 0%,rgba(255,219,204,.30),transparent 38%),radial-gradient(ellipse at 78% 4%,rgba(166,202,249,.30),transparent 43%),radial-gradient(ellipse at 52% 28%,rgba(255,232,220,.20),transparent 48%),repeating-linear-gradient(90deg,#6689b516 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b512 0 1px,transparent 1px 88px);background-attachment:fixed}
+
+/* A fixed shared backdrop prevents section/header backgrounds from diverging. */
+html{background:#edf4ff}
+body{position:relative;isolation:isolate;background:transparent!important}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-color:#edf4ff;background-image:radial-gradient(ellipse at 15% 8%,rgba(255,210,190,.38),transparent 38%),radial-gradient(ellipse at 82% 5%,rgba(149,192,247,.34),transparent 43%),radial-gradient(ellipse at 52% 35%,rgba(255,231,218,.24),transparent 50%),repeating-linear-gradient(90deg,#6689b522 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b51c 0 1px,transparent 1px 88px)}
+.topbar{background:transparent!important;background-image:none!important;backdrop-filter:none!important}
+.tool-section{background:transparent!important}
+.tool-section::before{content:none!important;display:none!important}
 .tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f533,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483610,transparent 32%),repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px)}
 .tool-card{background:rgba(255,255,255,.94);backdrop-filter:blur(16px) saturate(135%);border-color:#c8d7e9;box-shadow:0 6px 20px #294b7410}
 .tool-card:hover{background:rgba(255,255,255,.98);border-color:#D14836;box-shadow:0 15px 32px #294b7418}
