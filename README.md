@@ -68,7 +68,7 @@ Create a static production build with:
 npm run build
 ```
 
-This builds Wasm, runs the TypeScript type checker, then writes the static site to `dist/`. `npm run preview` serves that built site locally. No test command is configured yet. These commands have not been run in this workspace because npm and Rust/Cargo are not installed in the current environment.
+This builds Wasm, runs the TypeScript type checker, then writes the static site to `dist/`. `npm run preview` serves that built site locally. No test command is configured yet.
 
 ## Dependencies selected
 
