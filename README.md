@@ -62,7 +62,7 @@ npm run dev
 
 The `predev` script builds the Rust crate for the browser before starting Vite. The generated bindings and Wasm binary are written to `rust/core/pkg/` and are ignored by Git.
 
-Before `npm run build`, a prebuild step checks for `wasm-pack`. Linux build environments bootstrap the minimal Rust toolchain and install `wasm-pack` if it is missing; this requires `curl` and network access to Rust's official installer. On other platforms, install Rust, the Wasm target, and `wasm-pack` using the commands above first.
+The `build:wasm` script checks for `wasm-pack`, installs the Rust toolchain and Wasm target on Linux if they are missing, and then builds the Rust crate in the same process. A fresh Linux build requires `curl` and network access to Rust's official installer and crates.io. On other platforms, install Rust, the Wasm target, and `wasm-pack` using the commands above first. `npm run build` runs this step before type-checking and building the static site.
 
 Create a static production build with:
 

@@ -4,11 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "prebuild": "node scripts/ensure-wasm-toolchain.mjs",
-    "build:wasm": "wasm-pack build rust/core --target web --out-name projectpdf_core --no-pack",
+    "build:wasm": "node scripts/build-wasm.mjs",
+    "prebuild": "npm run build:wasm",
     "predev": "npm run build:wasm",
     "dev": "vite",
-    "build": "npm run build:wasm && tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
