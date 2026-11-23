@@ -12,3 +12,5 @@ h1,h2,h3,.brand,.how-intro h2{font-family:inherit}
 @media(max-width:650px){.tool-name{font-size:11px;margin-top:12px}}
 .tool-section{padding-top:36px}
 @media(max-width:650px){.tool-section{padding-top:28px}}
+dialog:modal{overscroll-behavior:contain}
+dialog::backdrop{overflow:hidden;overscroll-behavior:contain}

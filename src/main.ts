@@ -85,7 +85,20 @@ document.querySelector<HTMLButtonElement>('#clearSearch')!.addEventListener('cli
   renderTools();
 });
 document.querySelector<HTMLButtonElement>('#dialogClose')!.addEventListener('click', () => dialog.close());
-dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+if (!('closedBy' in HTMLDialogElement.prototype)) {
+  let pressedOutside = false;
+  const isOutsideDialog = (event: PointerEvent): boolean => {
+    const bounds = dialog.getBoundingClientRect();
+    return event.clientX < bounds.left || event.clientX > bounds.right
+      || event.clientY < bounds.top || event.clientY > bounds.bottom;
+  };
+  dialog.addEventListener('pointerdown', (event) => { pressedOutside = isOutsideDialog(event); });
+  dialog.addEventListener('pointerup', (event) => {
+    if (pressedOutside && isOutsideDialog(event) && dialog.open) dialog.close();
+    pressedOutside = false;
+  });
+  dialog.addEventListener('pointercancel', () => { pressedOutside = false; });
+}
 document.querySelector<HTMLButtonElement>('#dialogSubmit')!.addEventListener('click', () => dialog.close());
 document.addEventListener('keydown', (event) => {
   if (event.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName ?? '') && !dialog.open) {
