@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "prebuild": "node scripts/ensure-wasm-toolchain.mjs",
     "build:wasm": "wasm-pack build rust/core --target web --out-name projectpdf_core --no-pack",
     "predev": "npm run build:wasm",
     "dev": "vite",
