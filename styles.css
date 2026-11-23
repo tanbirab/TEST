@@ -95,7 +95,7 @@ body{background:#f2f6fc}
 
 /* One continuous page backdrop runs behind both the header and tool catalog. */
 body{background-color:#edf4ff;background-image:radial-gradient(ellipse at 12% 14%,rgba(255,205,181,.24),transparent 38%),radial-gradient(ellipse at 88% 5%,rgba(255,229,211,.32),transparent 36%),radial-gradient(ellipse at 52% 8%,rgba(139,184,245,.16),transparent 48%),repeating-linear-gradient(90deg,#6689b516 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b512 0 1px,transparent 1px 88px);background-attachment:fixed}
-.topbar{background:rgba(237,244,255,.08)!important;border:0!important;box-shadow:none!important;backdrop-filter:blur(3px)}
+.topbar{background-color:rgba(237,244,255,.08)!important;background-image:radial-gradient(ellipse at 12% 20%,rgba(255,205,181,.20),transparent 65%),radial-gradient(ellipse at 88% 15%,rgba(255,229,211,.24),transparent 60%),repeating-linear-gradient(90deg,#6689b52a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b526 0 1px,transparent 1px 88px)!important;background-attachment:fixed;border:0!important;box-shadow:none!important;backdrop-filter:blur(3px)}
 .tool-section{background:transparent!important}
 .tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f51c,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483608,transparent 32%)}
 .tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f533,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483610,transparent 32%),repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px)}
