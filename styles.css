@@ -44,3 +44,18 @@ body{background:var(--paper);color:var(--ink)}
 .drop-zone:hover,.drop-zone.dragover{background:#fbf3d7;border-color:#D14836}
 .upload-symbol,.selected-file{background:#fbf3d7;color:#B8392A}
 .tool-card:focus-visible,.filter:focus-visible,.header-cta:focus-visible,.hero-link:focus-visible,button:focus-visible{outline-color:#D14836}
+
+/* Give the tool catalog a clearer, polished card surface. */
+.tool-grid{gap:16px}
+.tool-card{border:1px solid #e5d7ac;background:#fff;border-radius:13px;box-shadow:0 3px 12px #4a30200a}
+.tool-card:hover{border-color:#D14836;box-shadow:0 12px 28px #4a302018}
+.tool-icon,.tool-icon.green,.tool-icon.peach,.tool-icon.lilac,.tool-icon.blue,.tool-icon.yellow,.tool-icon.rose{background:#fbf3d7;color:#a93225}
+.tool-card:nth-child(4n + 1) .tool-icon,.tool-card:nth-child(4n + 1) .tool-icon.green,.tool-card:nth-child(4n + 1) .tool-icon.peach,.tool-card:nth-child(4n + 1) .tool-icon.lilac,.tool-card:nth-child(4n + 1) .tool-icon.blue,.tool-card:nth-child(4n + 1) .tool-icon.yellow,.tool-card:nth-child(4n + 1) .tool-icon.rose{background:#fbe9e5;color:#B8392A}
+.tool-tag{color:#8d3025;background:#fbf3d7;border:1px solid #ecd06f;border-radius:20px;padding:4px 7px}
+.search-box{border-color:#dfd2ad;box-shadow:0 2px 8px #4a30200a}
+.filter{color:#655c4b}
+.filter:hover{background:#fff9e8}
+.filter.active{background:#fbf3d7;border-color:#D8B943;color:#8d3025}
+.tool-count{color:#716b60}
+.tool-count span:first-child{color:#25221d}
+.tool-section{background:#fff;padding-top:36px}
