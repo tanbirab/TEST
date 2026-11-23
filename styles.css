@@ -85,6 +85,14 @@ body{background:#f2f6fc}
 .topbar{background:rgba(242,246,252,.96);backdrop-filter:blur(20px) saturate(145%);border-color:#dce6f4}
 .tool-section{background:linear-gradient(180deg,#edf4ff 0%,#f5f8fd 62%,#f2f6fc 100%)!important}
 
+/* One shared grid and warm/cool glow spans the entire document, including the nav. */
+html,body{min-height:100%;background:#edf4ff!important}
+body{position:relative;isolation:isolate;background:transparent!important}
+body::before{content:""!important;display:block!important;position:fixed;inset:0;z-index:0;pointer-events:none;background-color:#edf4ff;background-image:radial-gradient(ellipse at 14% 2%,rgba(255,205,184,.42),transparent 40%),radial-gradient(ellipse at 82% 6%,rgba(149,192,247,.38),transparent 45%),radial-gradient(ellipse at 52% 52%,rgba(255,231,218,.26),transparent 52%),repeating-linear-gradient(90deg,#6689b526 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b520 0 1px,transparent 1px 88px)}
+body>*{position:relative;z-index:1}
+.topbar{position:sticky;top:0;z-index:5;background:transparent!important;background-image:none!important;backdrop-filter:none!important;border-bottom:0;box-shadow:none}
+.tool-section{background:transparent!important;background-image:none!important}
+
 /* Continue the catalog grid behind the navigation for one seamless surface. */
 .topbar{background-color:rgba(237,244,255,.94);background-image:repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px);background-position:0 0;background-size:auto;backdrop-filter:blur(18px) saturate(135%)}
 
@@ -111,6 +119,12 @@ body::before{content:none!important;display:none!important}
 main,#top,.tool-section{background:transparent!important}
 .topbar{background:transparent!important;background-color:transparent!important;background-image:none!important;backdrop-filter:none!important}
 .tool-section::before{content:none!important;display:none!important}
+
+/* Keep one continuous atmospheric grid behind every page section. */
+body{isolation:isolate;background:#edf4ff!important}
+body::before{content:""!important;display:block!important;position:fixed;inset:0;z-index:0;pointer-events:none;background-color:#edf4ff;background-image:radial-gradient(ellipse at 14% 0%,rgba(255,210,190,.42),transparent 40%),radial-gradient(ellipse at 82% 4%,rgba(149,192,247,.38),transparent 45%),radial-gradient(ellipse at 52% 52%,rgba(255,231,218,.25),transparent 52%),repeating-linear-gradient(90deg,#6689b526 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b520 0 1px,transparent 1px 88px)}
+body>*{position:relative;z-index:1}
+.topbar{position:sticky;top:0;z-index:5}
 body{background-color:#edf4ff;background-image:radial-gradient(ellipse at 18% 0%,rgba(255,219,204,.30),transparent 38%),radial-gradient(ellipse at 78% 4%,rgba(166,202,249,.30),transparent 43%),radial-gradient(ellipse at 52% 28%,rgba(255,232,220,.20),transparent 48%),repeating-linear-gradient(90deg,#6689b516 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b512 0 1px,transparent 1px 88px);background-attachment:fixed}
 
 /* A fixed shared backdrop prevents section/header backgrounds from diverging. */
