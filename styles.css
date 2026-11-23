@@ -92,6 +92,12 @@ body{background:#f2f6fc}
 .tool-section{background:radial-gradient(ellipse at 12% 4%,rgba(255,205,181,.34),transparent 38%),radial-gradient(ellipse at 88% 3%,rgba(255,229,211,.5),transparent 34%),linear-gradient(180deg,#edf4ff 0%,#f7f8fc 62%,#f2f6fc 100%)!important}
 .tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f522,transparent 45%),radial-gradient(ellipse at 95% 4%,#D148360b,transparent 32%),repeating-linear-gradient(90deg,#6689b514 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b510 0 1px,transparent 1px 88px)}
 .topbar{background-image:radial-gradient(ellipse at 12% 20%,rgba(255,205,181,.30),transparent 65%),radial-gradient(ellipse at 88% 15%,rgba(255,229,211,.36),transparent 60%),repeating-linear-gradient(90deg,#6689b514 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b510 0 1px,transparent 1px 88px)}
+
+/* One continuous page backdrop runs behind both the header and tool catalog. */
+body{background-color:#edf4ff;background-image:radial-gradient(ellipse at 12% 14%,rgba(255,205,181,.24),transparent 38%),radial-gradient(ellipse at 88% 5%,rgba(255,229,211,.32),transparent 36%),radial-gradient(ellipse at 52% 8%,rgba(139,184,245,.16),transparent 48%),repeating-linear-gradient(90deg,#6689b516 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b512 0 1px,transparent 1px 88px);background-attachment:fixed}
+.topbar{background:rgba(237,244,255,.08)!important;border:0!important;box-shadow:none!important;backdrop-filter:blur(3px)}
+.tool-section{background:transparent!important}
+.tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f51c,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483608,transparent 32%)}
 .tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f533,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483610,transparent 32%),repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px)}
 .tool-card{background:rgba(255,255,255,.94);backdrop-filter:blur(16px) saturate(135%);border-color:#c8d7e9;box-shadow:0 6px 20px #294b7410}
 .tool-card:hover{background:rgba(255,255,255,.98);border-color:#D14836;box-shadow:0 15px 32px #294b7418}
