@@ -14,3 +14,33 @@ h1,h2,h3,.brand,.how-intro h2{font-family:inherit}
 @media(max-width:650px){.tool-section{padding-top:28px}}
 dialog:modal{overscroll-behavior:contain}
 dialog::backdrop{overflow:hidden;overscroll-behavior:contain}
+
+/* Project palette: tomato red, warm gold, and clean white. */
+:root{--ink:#25221d;--muted:#736f67;--green:#D14836;--green-dark:#B8392A;--lime:#ECD06F;--paper:#fff;--white:#fff;--line:#EEE8DA;--shadow:0 18px 45px #4a302014}
+body{background:var(--paper);color:var(--ink)}
+.topbar{background:#ffffffe8;border-color:#eee8da}
+.brand-mark{background:#D14836;color:#fff}
+.brand-dot,.eyebrow-spark,.spark{color:#D14836}
+.header-cta,.dialog-submit{background:#D14836;color:#fff}
+.header-cta:hover,.dialog-submit:hover{background:#B8392A}
+.header-cta span{color:#ECD06F}
+.main-nav a:hover,.main-nav .nav-active{color:#D14836}
+.hero h1 span,.section-heading h2 span,.how-intro h2 span{color:#D14836}
+.arrow-circle{color:#D14836;border-color:#ecd06f}
+.tool-section{background:#fff}
+.search-box:focus-within{border-color:#D14836;box-shadow:0 0 0 3px #D148361c}
+.filter.active{background:#fbf3d7;border-color:#ECD06F;color:#8d3025}
+.filter span,.count-star{color:#D14836}
+.tool-card:hover{border-color:#ECD06F;box-shadow:0 10px 25px #4a302012}
+.tool-icon,.tool-icon.green,.tool-icon.peach,.tool-icon.lilac,.tool-icon.blue,.tool-icon.yellow,.tool-icon.rose{background:#fbf3d7;color:#B8392A}
+.card-arrow,.tool-card:hover .card-arrow{color:#D14836}
+.lilac-bg,.peach-bg,.mint-bg{background:#fbf3d7;color:#B8392A}
+.trust-strip{background:#fbf3d7;border-color:#ECD06F}
+.trust-mark{background:#D14836;color:#fff}
+.trust-points b{color:#B8392A}
+.tool-dialog{background:#fff}
+.dialog-icon{background:#fbf3d7;color:#B8392A}
+.drop-zone{border-color:#ECD06F;background:#fffdf6}
+.drop-zone:hover,.drop-zone.dragover{background:#fbf3d7;border-color:#D14836}
+.upload-symbol,.selected-file{background:#fbf3d7;color:#B8392A}
+.tool-card:focus-visible,.filter:focus-visible,.header-cta:focus-visible,.hero-link:focus-visible,button:focus-visible{outline-color:#D14836}
