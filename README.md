@@ -72,6 +72,8 @@ npm run build
 
 This builds Wasm, runs the TypeScript type checker, then writes the static site to `dist/`. `npm run preview` serves that built site locally. No test command is configured yet.
 
+Cloudflare Workers deploys the built static files from `dist/` using `wrangler.jsonc`; the Wrangler CLI is installed as a project development dependency. The Pages/Workers build must run `npm run build` before `npx wrangler deploy`.
+
 ## Dependencies selected
 
 - [Vite](https://vite.dev/guide/) provides the TypeScript-aware static-site development and build pipeline. Vite transpiles TypeScript; the configured `tsc --noEmit` command performs type checking.
