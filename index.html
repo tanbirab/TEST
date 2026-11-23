@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f7f8f5" />
+  <meta name="description" content="A simpler way to resize photos, organize PDFs, and get your files ready." />
+  <title>File tools, made easy — Paperplane</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Paperplane home"><span class="brand-mark"><svg viewBox="0 0 32 32" fill="none"><path d="M27 5 14.8 27l-3.2-9.6L5 14.2 27 5Z" fill="currentColor"/><path d="m11.6 17.4 8-7.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span><span>paperplane<span class="brand-dot">.</span></span></a>
+    <nav class="main-nav" aria-label="Main navigation"><a class="nav-active" href="#tools">All tools</a><a href="#how-it-works">How it works</a><a href="#trust">Why Paperplane</a></nav>
+    <div class="header-actions"><button class="icon-btn" aria-label="Open menu" id="menuButton"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><a class="header-cta" href="#tools">Explore tools <span>↗</span></a></div>
+  </header>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-spark">✳</span> YOUR FILES, UNDER CONTROL</div>
+        <h1 id="hero-title">Small tasks.<br /><span>Sorted.</span></h1>
+        <p class="hero-sub">A growing set of tools for your photos and PDFs. Choose a tool to see what’s available.</p>
+        <a class="hero-link" href="#tools">Find your tool <span class="arrow-circle">↓</span></a>
+        <div class="hero-proof"><div class="avatar-stack"><span>✿</span><span>⌘</span><span>✳</span></div><span>Made for the little things<br /><b>that make a big difference.</b></span></div>
+      </div>
+      <div class="hero-art" aria-label="Illustration of neatly organized photo and PDF files">
+        <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><span class="spark spark-one">✳</span><span class="spark spark-two">✦</span><span class="spark spark-three">·</span>
+        <div class="floating-note note-top"><span class="note-icon green">↘</span><span><b>Just the right size</b><small>Compressed & ready</small></span><span class="note-check">✓</span></div>
+        <div class="file-stack">
+          <div class="file-back"><span class="back-icon">▧</span></div>
+          <div class="file-main"><div class="file-head"><span class="pdf-badge">PDF</span><span class="file-more">•••</span></div><div class="file-lines"><i></i><i></i><i></i><i></i></div><div class="file-footer"><span>your document</span><span class="tiny-check">✓</span></div></div>
+          <div class="photo-card"><div class="photo-sun"></div><div class="photo-mountain mountain-a"></div><div class="photo-mountain mountain-b"></div><div class="photo-caption">weekend.jpg</div></div>
+          <div class="mini-pill">✦ &nbsp; Easy as that</div>
+        </div>
+        <div class="floating-note note-bottom"><span class="note-icon lilac">↔</span><span><b>Fits just right</b><small>Dimensions updated</small></span></div>
+      </div>
+    </section>
+
+    <section class="tool-section" id="tools">
+      <div class="section-heading"><div><div class="eyebrow section-eyebrow"><span class="eyebrow-spark">✳</span> THE TOOLBOX</div><h2>What can we help <span>with?</span></h2><p>Explore the tools planned for Paperplane.</p></div><div class="tool-count"><span id="toolCount">17</span> tools <span class="count-star">✳</span></div></div>
+      <div class="tool-controls">
+        <div class="search-box"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.7" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.1 4.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="toolSearch" type="search" placeholder="Search all tools..." aria-label="Search tools" /><kbd>/</kbd></div>
+        <div class="filters" role="group" aria-label="Filter tools"><button class="filter active" data-filter="All">All tools <span>17</span></button><button class="filter" data-filter="Images">Images</button><button class="filter" data-filter="PDFs">PDFs</button><button class="filter" data-filter="Signatures">Signatures</button></div>
+      </div>
+      <div class="tool-grid" id="toolGrid"></div>
+      <div class="empty-state" id="emptyState" hidden><span>⌕</span><h3>No tools found</h3><p>Try another search or choose a different category.</p><button id="clearSearch">Clear filters</button></div>
+    </section>
+
+    <section class="how-section" id="how-it-works"><div class="how-intro"><div class="eyebrow"><span class="eyebrow-spark">✳</span> HOW IT WILL WORK</div><h2>Three steps.<br /><span>That’s it.</span></h2><p>Each tool will guide you through choosing a file and saving your result.</p></div><div class="steps"><article class="step"><span class="step-num">01</span><span class="step-icon lilac-bg">↥</span><h3>Choose a tool</h3><p>Pick the task you want to complete.</p></article><article class="step"><span class="step-num">02</span><span class="step-icon peach-bg">＋</span><h3>Add your file</h3><p>Select the file you want to work with.</p></article><article class="step"><span class="step-num">03</span><span class="step-icon mint-bg">↓</span><h3>Save your result</h3><p>Download a finished file when processing is available.</p></article></div></section>
+    <section class="trust-strip" id="trust"><div class="trust-mark">✳</div><div><h3>Designed for on-device processing.</h3><p>File processing is planned to run locally in your browser. Tools are not implemented yet.</p></div><div class="trust-points"><span><b>✦</b> No account flow</span><span><b>↗</b> Browser based</span><span><b>♡</b> Built step by step</span></div></section>
+  </main>
+
+  <footer><a class="brand footer-brand" href="#top"><span class="brand-mark"><svg viewBox="0 0 32 32" fill="none"><path d="M27 5 14.8 27l-3.2-9.6L5 14.2 27 5Z" fill="currentColor"/><path d="m11.6 17.4 8-7.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span><span>paperplane<span class="brand-dot">.</span></span></a><span>Little tools for everyday files.</span><span>© 2026 Paperplane</span></footer>
+
+  <dialog id="toolDialog" class="tool-dialog" aria-labelledby="dialogTitle"><button class="dialog-close" id="dialogClose" aria-label="Close">×</button><div class="dialog-icon" id="dialogIcon">↗</div><div class="eyebrow">TOOL STATUS</div><h2 id="dialogTitle">Choose a tool</h2><p id="dialogDescription">This tool is planned but file processing is not available yet.</p><div class="tool-status" role="status">Processing is not implemented yet. Your file will not be read or uploaded.</div><button class="dialog-submit" id="dialogSubmit">Got it <span>→</span></button><p class="privacy-note">No file is selected or processed in this preview.</p></dialog>
+  <div class="toast" id="toast" role="status"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

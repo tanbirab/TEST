@@ -1,0 +1,17 @@
+{
+  "name": "projectpdf",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build:wasm": "wasm-pack build rust/core --target web --out-name projectpdf_core --no-pack",
+    "predev": "npm run build:wasm",
+    "dev": "vite",
+    "build": "npm run build:wasm && tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}
