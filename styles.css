@@ -10,3 +10,5 @@ h1,h2,h3,.brand,.how-intro h2{font-family:inherit}
 .tool-name{display:block;font-size:12px;line-height:1.35;margin-top:15px;font-weight:700;letter-spacing:-.15px;padding-right:12px}
 .tool-status{padding:13px;border:1px solid #e8ebe5;background:#f8faf6;border-radius:9px;color:#657061;font-size:11px;line-height:1.6}
 @media(max-width:650px){.tool-name{font-size:11px;margin-top:12px}}
+.tool-section{padding-top:36px}
+@media(max-width:650px){.tool-section{padding-top:28px}}
