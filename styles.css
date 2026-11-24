@@ -213,6 +213,7 @@ body::before{content:none!important;display:none!important}
 
 .tool-card{min-height:174px;padding-bottom:34px}
 .tool-description{display:block;margin-top:6px;padding-right:10px;color:#7c867d;font-size:11px;line-height:1.45}
+.tool-grid{grid-auto-rows:1fr;align-items:stretch}
 @media(max-width:650px){.tool-card{min-height:158px;padding-bottom:30px}.tool-description{font-size:10px;line-height:1.4}}
 
 @media(max-width:650px){
