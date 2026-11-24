@@ -164,10 +164,3 @@ body{background:#edf4ff}
 
 /* Let the header scroll with the page so it never covers the catalog controls. */
 .topbar{position:relative!important;top:auto!important;z-index:auto!important}
-
-/* Remove the added page-wide grid and color wash. */
-html{background:#f7f8f5!important}
-body{background:#f7f8f5!important;background-image:none!important}
-body::before{content:none!important;display:none!important}
-.topbar{background:#f7f8f5!important;background-image:none!important;backdrop-filter:none!important}
-.tool-section{background:#fff!important;background-image:none!important}
