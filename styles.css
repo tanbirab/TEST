@@ -233,3 +233,6 @@ body{
 }
 @media(max-width:900px){body{--page-grid-step:calc((90vw + 16px) / 9)}}
 @media(max-width:650px){body{--page-grid-step:calc((100vw - 31px) / 6)}}
+
+/* Keep the modal anchored to the viewport, even when a lower card is opened. */
+.tool-dialog{position:fixed;inset:0;margin:auto;max-height:calc(100dvh - 32px);overflow:auto}
