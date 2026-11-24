@@ -64,6 +64,7 @@ let estimateVersion = 0;
 let estimateCache: { key: string; outputs: EngineOutput[] } | undefined;
 let estimateInFlight = false;
 let estimateQueued = false;
+let targetQualityBaseline: { file: File; quality: number; bytes: number } | undefined;
 
 function renderTools(): void {
   const visibleTools = activeFilter === 'All' ? tools : tools.filter((tool) => tool.category === activeFilter);
@@ -131,7 +132,7 @@ function workflowMarkup(tool: Tool): string {
 
 function openTool(tool: Tool, navigate = true): void {
   if (submit.parentElement !== toolForm) toolForm.append(submit);
-  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; window.clearTimeout(estimateTimer); estimateVersion += 1;
+  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; targetQualityBaseline = undefined; window.clearTimeout(estimateTimer); estimateVersion += 1;
   dialogTitle.textContent = tool.name;
   dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
   dialogDescription.textContent = tool.description;
@@ -165,7 +166,11 @@ function openTool(tool: Tool, navigate = true): void {
       if (input.name === 'dithering' && ditheringOut) { ditheringOut.value = Number(input.value).toFixed(2); input.setAttribute('aria-valuetext', ditheringOut.value); }
       const ditheringInput = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
       if (input.name === 'paletteColors' && ditheringInput) ditheringInput.disabled = input.value === '256';
-      if (input.name === 'targetKb') updateTargetReduction();
+      if (input.name === 'targetKb') {
+        updateTargetReduction();
+        adjustQualityForTarget();
+        requestEstimate();
+      }
     });
     input.addEventListener('change', requestEstimate);
   });
@@ -312,6 +317,24 @@ function updateTargetReduction(): void {
     : `Your ${target} KB target requires about ${Math.ceil(reduction)}% size reduction.`;
 }
 
+function adjustQualityForTarget(): void {
+  const targetField = fields.querySelector<HTMLInputElement>('#targetKb');
+  const quality = fields.querySelector<HTMLInputElement>('#quality');
+  const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
+  if (!targetField?.value) { targetQualityBaseline = undefined; return; }
+  if (!quality || !file) return;
+  const targetBytes = Number(targetField.value) * 1024;
+  if (!Number.isFinite(targetBytes) || targetBytes <= 0) return;
+  if (!targetQualityBaseline || targetQualityBaseline.file !== file) {
+    const cached = previewFile === file ? estimateCache?.outputs[0] : undefined;
+    targetQualityBaseline = { file, quality: cached?.quality ?? Number(quality.value), bytes: cached?.blob.size ?? file.size };
+  }
+  const guess = Math.round(targetQualityBaseline.quality * Math.sqrt(targetBytes / Math.max(1, targetQualityBaseline.bytes)));
+  const adjusted = Math.max(Number(quality.min), Math.min(Number(quality.max), guess));
+  quality.value = String(adjusted);
+  quality.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 function requestEstimate(): void {
   if (!activeTool || !['Reduce Photo File Size', 'Reduce Signature File Size', 'Convert Photo to JPG', 'Reduce PDF File Size'].includes(activeTool.name)) return;
   const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
@@ -364,6 +387,7 @@ function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOu
   const quality = fields.querySelector<HTMLInputElement>('#quality');
   const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
   const selectedQuality = outputs[0]?.quality;
+  if (selectedQuality !== undefined) targetQualityBaseline = { file, quality: selectedQuality, bytes: outputs[0].blob.size };
   if (target?.value && selectedQuality !== undefined && quality) {
     quality.value = String(selectedQuality);
     quality.setAttribute('aria-valuetext', `${selectedQuality} percent quality`);
@@ -413,6 +437,7 @@ function releasePreview(): void {
 
 toolForm.addEventListener('submit', async (event) => {
   event.preventDefault();
+  if (event.submitter !== submit) return;
   if (!activeTool) return;
   const files = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement).files;
   const signature = (toolForm.elements.namedItem('signatureFile') as HTMLInputElement | null)?.files;
@@ -443,6 +468,11 @@ toolForm.addEventListener('submit', async (event) => {
     status.textContent = error instanceof Error ? error.message : 'Processing failed. Please check the file and try again.';
     submit.disabled = false; submit.textContent = 'Try again';
   }
+});
+
+toolForm.addEventListener('keydown', (event) => {
+  if (activeTool?.name !== 'Reduce Photo File Size' || event.key !== 'Enter') return;
+  if (event.target instanceof HTMLInputElement && event.target.type !== 'file') event.preventDefault();
 });
 
 function inlineIcon(markup: string, prefix: string): string {
