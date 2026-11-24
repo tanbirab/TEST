@@ -60,6 +60,8 @@ let outputPreviewUrl: string | undefined;
 let estimateTimer = 0;
 let estimateVersion = 0;
 let estimateCache: { key: string; outputs: EngineOutput[] } | undefined;
+let estimateInFlight = false;
+let estimateQueued = false;
 
 function renderTools(): void {
   const visibleTools = activeFilter === 'All' ? tools : tools.filter((tool) => tool.category === activeFilter);
@@ -130,7 +132,10 @@ function openTool(tool: Tool, navigate = true): void {
   dialogTitle.focus({ preventScroll: true });
   const fileInputElement = toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null;
   fileInputElement?.addEventListener('change', () => { void showSelectedFiles(fileInputElement.files ? [...fileInputElement.files] : []); requestEstimate(); });
-  fields.querySelectorAll<HTMLInputElement>('input[type="range"], input[type="number"]').forEach((input) => input.addEventListener('input', () => { const out = fields.querySelector<HTMLOutputElement>('#qualityValue'); if (out && input.type === 'range') { out.value = `${input.value}%`; input.setAttribute('aria-valuetext', `${input.value} percent quality`); } requestEstimate(); }));
+  fields.querySelectorAll<HTMLInputElement>('input[type="range"], input[type="number"]').forEach((input) => {
+    input.addEventListener('input', () => { const out = fields.querySelector<HTMLOutputElement>('#qualityValue'); if (out && input.type === 'range') { out.value = `${input.value}%`; input.setAttribute('aria-valuetext', `${input.value} percent quality`); } });
+    input.addEventListener('change', requestEstimate);
+  });
   fields.querySelectorAll<HTMLLabelElement>('.upload-zone').forEach((zone) => {
     zone.addEventListener('dragover', (event) => { event.preventDefault(); zone.classList.add('dragover'); });
     zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
@@ -217,6 +222,8 @@ function requestEstimate(): void {
   estimateTimer = window.setTimeout(async () => {
     const tool = activeTool;
     if (!tool) return;
+    if (estimateInFlight) { estimateQueued = true; return; }
+    estimateInFlight = true;
     const outputFiles = (toolForm.elements.namedItem('signatureFile') as HTMLInputElement | null)?.files;
     try {
       const outputs = await runEngine({ tool: tool.name, files: [file], extraFiles: outputFiles ? [...outputFiles] : [], form: toolForm, report: (message) => { if (version === estimateVersion) estimate.value = message; } });
@@ -227,8 +234,11 @@ function requestEstimate(): void {
       if (version !== estimateVersion) return;
       estimateCache = undefined;
       estimate.value = error instanceof Error ? `Estimate unavailable: ${error.message}` : 'Estimate unavailable. The selected file will be checked when processed.';
+    } finally {
+      estimateInFlight = false;
+      if (estimateQueued) { estimateQueued = false; requestEstimate(); }
     }
-  }, 600);
+  }, 250);
 }
 
 function formatBytes(bytes: number): string { return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(2)} MB` : `${(bytes / 1024).toFixed(0)} KB`; }

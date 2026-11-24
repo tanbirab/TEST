@@ -1,5 +1,5 @@
 import { zipSync } from 'fflate';
-import { encodeMozJpeg, optimizePng } from './image-codec';
+import { encodeMozJpeg, encodeMozJpegFile, optimizePng } from './image-codec';
 
 export type EngineOutput = { name: string; blob: Blob; message?: string };
 
@@ -101,6 +101,10 @@ async function mozJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Arra
   return encodeMozJpeg(context.getImageData(0, 0, canvas.width, canvas.height), quality);
 }
 
+function mozJpegFile(file: File, quality: number, whiteBackground = false): Promise<ArrayBuffer> {
+  return encodeMozJpegFile(file, quality, whiteBackground);
+}
+
 async function compressImage(file: File, form: HTMLFormElement, report: RunInput['report'], signature: boolean): Promise<EngineOutput> {
   const stem = safeStem(file.name);
   const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
@@ -110,24 +114,17 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
     return output(`${stem}-optimized.png`, optimized, 'image/png');
   }
 
-  const canvas = await imageCanvas(file);
-  if (signature) {
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Could not prepare the signature image.');
-    context.globalCompositeOperation = 'destination-over';
-    context.fillStyle = '#fff';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-  }
+  const whiteBackground = signature;
   const targetKb = Number(value(form, 'targetKb', '0'));
   const startQuality = Number(value(form, 'quality', '82')) / 100;
   report(targetKb > 0 ? 'Searching for the highest JPEG quality that meets your target…' : 'Encoding a compact JPEG in your browser…');
-  let best = await mozJpeg(canvas, startQuality);
+  let best = await mozJpegFile(file, startQuality, whiteBackground);
   if (targetKb > 0 && best.byteLength > targetKb * 1024) {
     let low = 0.12;
     let high = startQuality;
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const quality = (low + high) / 2;
-      const candidate = await mozJpeg(canvas, quality);
+      const candidate = await mozJpegFile(file, quality, whiteBackground);
       if (candidate.byteLength <= targetKb * 1024) { best = candidate; low = quality; }
       else high = quality;
     }
@@ -160,7 +157,7 @@ async function imageTask(input: RunInput): Promise<EngineOutput[]> {
   if (tool === 'Reduce Signature File Size') return [await compressImage(first, form, report, true)];
   if (tool === 'Convert Photo to JPG') {
     report('Converting the image with the MozJPEG encoder…');
-    return [output(`${safeStem(first.name)}.jpg`, await mozJpeg(await imageCanvas(first), Number(value(form, 'quality', '90')) / 100), 'image/jpeg')];
+    return [output(`${safeStem(first.name)}.jpg`, await mozJpegFile(first, Number(value(form, 'quality', '90')) / 100), 'image/jpeg')];
   }
   if (tool === 'Change Photo Width & Height' || tool === 'Change Signature Width & Height') {
     const width = numberValue(form, 'width', 800);

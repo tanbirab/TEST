@@ -1,10 +1,14 @@
 type ImageReply = { id: number; result?: ArrayBuffer; error?: string };
 type ImageJobPayload =
   | { kind: 'jpeg'; width: number; height: number; pixels: Uint8ClampedArray; quality: number }
+  | { kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean }
+  | { kind: 'release-source'; key: string }
   | { kind: 'png'; bytes: ArrayBuffer };
 
 let worker: Worker | undefined;
 let nextId = 0;
+let nextSourceId = 0;
+const sourceIds = new WeakMap<Blob, string>();
 const pending = new Map<number, { resolve: (bytes: ArrayBuffer) => void; reject: (error: Error) => void }>();
 
 function getWorker(): Worker {
@@ -36,6 +40,12 @@ function send(job: ImageJobPayload, transfer: Transferable[]): Promise<ArrayBuff
 export function encodeMozJpeg(image: ImageData, quality: number): Promise<ArrayBuffer> {
   const pixels = image.data.slice();
   return send({ kind: 'jpeg', width: image.width, height: image.height, pixels, quality: Math.round(quality * 100) }, [pixels.buffer]);
+}
+
+export function encodeMozJpegFile(file: Blob, quality: number, whiteBackground = false): Promise<ArrayBuffer> {
+  let key = sourceIds.get(file);
+  if (!key) { key = `image-${++nextSourceId}`; sourceIds.set(file, key); }
+  return send({ kind: 'jpeg-file', key, file, quality: Math.round(quality * 100), whiteBackground }, []);
 }
 
 export function optimizePng(bytes: ArrayBuffer): Promise<ArrayBuffer> {
