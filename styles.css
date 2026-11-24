@@ -277,6 +277,48 @@ body{
 .comparison-range::-moz-range-thumb{width:44px;height:100%;background:transparent;border:0;border-radius:0}
 .image-comparison:has(.comparison-range:focus-visible) .comparison-handle{outline:3px solid #d14836;outline-offset:3px}
 .size-estimate{min-height:0;padding:8px 12px;font-size:12px}
+.tool-page[data-tool="reduce-photo-file-size"]{max-width:1120px;padding:34px clamp(20px,4vw,48px) 44px}
+.tool-page[data-tool="reduce-photo-file-size"] .tool-page-heading{display:none}
+.tool-page[data-tool="reduce-photo-file-size"] .tool-back{margin:0 0 16px}
+.photo-compressor{display:grid;gap:22px}
+.photo-dropzone{min-height:270px;padding:30px;border:2px dashed #bdb9ae;border-radius:28px;background:#faf9f6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;cursor:pointer}
+.photo-upload-icon{width:64px;height:64px;display:grid;place-items:center;border:1.5px solid #e5e0d6;border-radius:20px;background:#fff;color:#1d1d1b;font-size:38px;line-height:1}
+.photo-dropzone strong{color:#1d1d1b;font-size:23px;letter-spacing:-.4px}
+.photo-drop-help{color:#66645f;font-size:15px}
+.photo-browse{padding:12px 22px;border-radius:12px;background:#1d1d1b;color:white;font-size:15px;font-weight:700}
+.photo-dropzone:hover,.photo-dropzone.dragover{border-color:#d14836;background:#fffaf6}
+.photo-dropzone input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.photo-file-row{min-height:84px;padding:13px 18px;border:1.5px solid #e5e0d6;border-radius:18px;display:flex;align-items:center;gap:16px}
+.photo-file-row[hidden]{display:none}
+.photo-file-mark{width:56px;height:56px;flex:none;border-radius:13px;background:linear-gradient(#f4a84f 0 50%,#624b6b 50%)}
+.photo-file-meta{display:grid;min-width:0;gap:3px;flex:1}.photo-file-meta strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px}.photo-file-meta small{color:#74726d;font-size:13px}
+.photo-remove{border:0;background:transparent;color:#64615b;text-decoration:underline;text-underline-offset:3px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:8px}
+.photo-compressor .size-estimate{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0;background:transparent;color:#6a655d;font-size:12px;font-weight:500;line-height:1.4;min-height:0}
+.photo-compressor .file-preview{max-height:none;overflow:visible}
+.photo-compressor .image-comparison{max-height:720px;border:0;border-radius:22px}
+.compression-stats{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:14px}
+.compression-stats>div{min-height:108px;padding:18px 20px;border-radius:18px;background:#f5f3ef;display:grid;align-content:center;gap:5px}
+.compression-stats small{color:#6d6963;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.compression-stats strong{font-size:27px;letter-spacing:-.8px;font-variant-numeric:tabular-nums}
+.compression-stats .compression-result{background:#1d1d1b;color:#fff}.compression-stats .compression-result small{color:#d8d6d1}
+.compression-stats .compression-saved{background:#e4f2e7;color:#19642d}.compression-stats .compression-saved small{color:#287140}
+.compression-levels h3{margin:0 0 12px;font-size:17px}
+.compression-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.compression-presets button{min-height:92px;padding:14px 17px;border:1.5px solid #ded9ce;border-radius:16px;background:#fff;text-align:left;cursor:pointer;display:grid;align-content:center;gap:6px;color:#242320}
+.compression-presets button:hover{border-color:#99948a}
+.compression-presets button[aria-pressed="true"]{border:2px solid #242320;background:#f5f3ef}
+.compression-presets strong{font-size:15px}.compression-presets span{color:#706d67;font-size:13px}
+.photo-fine-tune{padding:17px 20px;border:1px solid #e5e0d6;border-radius:17px;background:#faf9f6}
+.photo-fine-tune summary{font-size:17px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.photo-fine-tune summary::-webkit-details-marker{display:none}.photo-fine-tune summary::after{content:'⌄';color:#77736c;font-size:20px}.photo-fine-tune[open] summary::after{content:'⌃'}
+.photo-fine-tune-body{display:grid;gap:18px;padding-top:20px}
+.photo-fine-tune .engine-field{gap:8px}.photo-fine-tune .engine-field label{font-size:14px}.photo-fine-tune input[type=range]{height:28px;accent-color:#1d1d1b}
+.photo-fine-tune .engine-field input:not([type=range]){min-height:54px;border-radius:13px}
+.photo-unit{color:#77736c;font-weight:400}
+.tool-page[data-tool="reduce-photo-file-size"] .tool-status{margin:0;min-height:0;padding:6px 0;border:0;background:transparent;color:#6a655d;text-align:center;font-size:12px}
+.tool-page[data-tool="reduce-photo-file-size"] .dialog-submit{margin-top:2px;padding:18px;border-radius:18px;font-size:18px;box-shadow:0 8px 24px #d1483640}
+.tool-page[data-tool="reduce-photo-file-size"] .dialog-submit:disabled{box-shadow:none}
+@media(max-width:650px){.tool-page[data-tool="reduce-photo-file-size"]{padding:18px 14px 28px}.photo-compressor{gap:15px}.photo-dropzone{min-height:210px;padding:20px 12px;border-radius:20px}.photo-dropzone strong{font-size:20px}.photo-drop-help{font-size:12px}.photo-file-row{padding:11px;gap:10px}.photo-file-mark{width:44px;height:44px}.photo-file-meta strong{font-size:12px}.photo-file-meta small{font-size:11px}.photo-remove{font-size:12px}.photo-compressor .image-comparison{border-radius:15px}.compression-stats{gap:7px}.compression-stats>div{min-height:82px;padding:10px;border-radius:13px}.compression-stats small{font-size:9px}.compression-stats strong{font-size:20px}.compression-presets{gap:7px}.compression-presets button{min-height:76px;padding:10px;border-radius:12px}.compression-presets strong{font-size:13px}.compression-presets span{font-size:10px}.photo-fine-tune{padding:14px;border-radius:13px}}
 .file-summary{margin:0;white-space:pre-line;overflow-wrap:anywhere;font-size:11px;color:#667166}
 .tool-page .tool-status{margin:0;min-height:45px}
 .tool-page .privacy-note{margin-top:14px}
