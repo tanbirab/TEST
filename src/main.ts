@@ -134,6 +134,9 @@ function openTool(tool: Tool, navigate = true): void {
   dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
   dialogDescription.textContent = tool.description;
   toolPage.dataset.tool = toolSlug(tool);
+  const isPhotoCompressor = tool.name === 'Reduce Photo File Size';
+  toolForm.classList.toggle('photo-compression-form', isPhotoCompressor);
+  fields.classList.toggle('photo-workflow-fields', isPhotoCompressor);
   fields.innerHTML = workflowMarkup(tool);
   status.textContent = 'Choose your file and settings. Processing runs in your browser.';
   submit.textContent = tool.name === 'Reduce Photo File Size' ? 'Choose a photo first' : 'Run tool'; submit.disabled = tool.name === 'Reduce Photo File Size';
