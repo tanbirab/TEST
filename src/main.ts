@@ -106,7 +106,7 @@ function workflowMarkup(tool: Tool): string {
     <label class="photo-dropzone" for="sourceFiles"><span class="photo-upload-icon" aria-hidden="true">↥</span><strong>Drop a photo here</strong><span class="photo-drop-help">or paste with Ctrl+V · JPG, PNG or WebP · up to 100 MB</span><span class="photo-browse">Browse files</span><input id="sourceFiles" name="sourceFiles" type="file" accept="image/*" required></label>
     <div class="photo-file-row" id="photoFileRow" hidden><span class="photo-file-mark" aria-hidden="true"></span><span class="photo-file-meta"><strong id="photoFileName"></strong><small id="photoFileDetails"></small></span><button class="photo-remove" id="photoRemove" type="button">Remove</button></div>
     <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to start.</output>
-    <div id="filePreview" class="file-preview"></div>
+    <div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a photo to see the original and compressed versions.</small></div></div>
     <div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
     <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section>
     <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller, more posterized image.</small></div></div></details>
@@ -137,6 +137,7 @@ function openTool(tool: Tool, navigate = true): void {
   const isPhotoCompressor = tool.name === 'Reduce Photo File Size';
   toolForm.classList.toggle('photo-compression-form', isPhotoCompressor);
   fields.classList.toggle('photo-workflow-fields', isPhotoCompressor);
+  toolPage.classList.remove('has-photo');
   fields.innerHTML = workflowMarkup(tool);
   status.textContent = 'Choose your file and settings. Processing runs in your browser.';
   submit.textContent = tool.name === 'Reduce Photo File Size' ? 'Choose a photo first' : 'Run tool'; submit.disabled = tool.name === 'Reduce Photo File Size';
@@ -183,7 +184,8 @@ function clearPhotoSelection(): void {
   if (input) input.value = '';
   releasePreview(); estimateCache = undefined; estimateVersion += 1; window.clearTimeout(estimateTimer);
   fields.querySelector<HTMLElement>('#photoFileRow')?.setAttribute('hidden', '');
-  fields.querySelector<HTMLDivElement>('#filePreview')?.replaceChildren();
+  fields.querySelector<HTMLDivElement>('#filePreview')!.innerHTML = '<div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a photo to see the original and compressed versions.</small></div>';
+  toolPage.classList.remove('has-photo');
   fields.querySelector<HTMLOutputElement>('#sizeEstimate')!.value = 'Choose a photo to start.';
   fields.querySelector<HTMLElement>('#originalSize')!.textContent = '—';
   fields.querySelector<HTMLElement>('#compressedSize')!.textContent = '—';
@@ -235,6 +237,7 @@ async function showSelectedFiles(files: File[]): Promise<void> {
   preview.replaceChildren(summary);
   const image = files[0];
   if (!image.type.startsWith('image/') || image.type === 'application/pdf') return;
+  if (activeTool?.name === 'Reduce Photo File Size') toolPage.classList.add('has-photo');
   const photoName = fields.querySelector<HTMLElement>('#photoFileName');
   if (photoName) {
     const row = fields.querySelector<HTMLElement>('#photoFileRow')!; row.hidden = false;
