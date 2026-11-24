@@ -109,10 +109,6 @@ if (!('closedBy' in HTMLDialogElement.prototype)) {
   dialog.addEventListener('pointercancel', () => { pressedOutside = false; });
 }
 document.querySelector<HTMLButtonElement>('#dialogSubmit')!.addEventListener('click', () => dialog.close());
-document.querySelector<HTMLButtonElement>('#menuButton')!.addEventListener('click', () => {
-  document.querySelector('#tools')?.scrollIntoView({ behavior: 'smooth' });
-});
-
 renderTools();
 void initializeCore().catch(() => {
   // Tool selection will explain that the local module is unavailable.
