@@ -1,7 +1,7 @@
 type ImageReply = { id: number; result?: ArrayBuffer; error?: string };
 type ImageJobPayload =
   | { kind: 'jpeg'; width: number; height: number; pixels: Uint8ClampedArray; quality: number }
-  | { kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number }
+  | { kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number; dithering: number }
   | { kind: 'release-source'; key: string }
   | { kind: 'png'; bytes: ArrayBuffer };
 
@@ -42,9 +42,9 @@ export function encodeMozJpeg(image: ImageData, quality: number): Promise<ArrayB
   return send({ kind: 'jpeg', width: image.width, height: image.height, pixels, quality: Math.round(quality * 100) }, [pixels.buffer]);
 }
 
-export function encodeMozJpegFile(file: Blob, quality: number, whiteBackground = false, paletteColors = 256): Promise<ArrayBuffer> {
+export function encodeMozJpegFile(file: Blob, quality: number, whiteBackground = false, paletteColors = 256, dithering = 0.48): Promise<ArrayBuffer> {
   const key = getSourceId(file);
-  return send({ kind: 'jpeg-file', key: `${key}:${whiteBackground ? 'white' : 'alpha'}`, file, quality: Math.round(quality * 100), whiteBackground, paletteColors }, []);
+  return send({ kind: 'jpeg-file', key: `${key}:${whiteBackground ? 'white' : 'alpha'}`, file, quality: Math.round(quality * 100), whiteBackground, paletteColors, dithering }, []);
 }
 
 function getSourceId(file: Blob): string {

@@ -109,7 +109,7 @@ function workflowMarkup(tool: Tool): string {
     <div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a photo to see the original and compressed versions.</small></div></div>
     <div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
     <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section>
-    <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller, more posterized image.</small></div></div></details>
+    <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
   </div>`;
   if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>PNG files retain transparency and use lossless optimization.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a signature image to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Change Photo Width & Height' || name === 'Change Signature Width & Height') return `${fileInput(name.includes('Signature') ? 'Choose a signature image' : 'Choose a photo', 'image/*')}${numericField('width', 'Width (pixels)', 800)}${numericField('height', 'Height (pixels)', 600)}<div id="filePreview" class="file-preview"></div>`;
@@ -154,10 +154,17 @@ function openTool(tool: Tool, navigate = true): void {
       if (input.name === 'quality' && out) { out.value = `${input.value}%`; input.setAttribute('aria-valuetext', `${input.value} percent quality`); }
       if (input.name === 'quality') fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.quality === input.value)));
       if (input.name === 'paletteColors' && paletteOut) { paletteOut.value = input.value === '256' ? 'Full color' : `${input.value} colors`; input.setAttribute('aria-valuetext', paletteOut.value); }
+      const ditheringOut = fields.querySelector<HTMLOutputElement>('#ditheringValue');
+      if (input.name === 'dithering' && ditheringOut) { ditheringOut.value = Number(input.value).toFixed(2); input.setAttribute('aria-valuetext', ditheringOut.value); }
+      const ditheringInput = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
+      if (input.name === 'paletteColors' && ditheringInput) ditheringInput.disabled = input.value === '256';
       if (input.name === 'targetKb') updateTargetReduction();
     });
     input.addEventListener('change', requestEstimate);
   });
+  const initialPalette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
+  const initialDithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
+  if (initialPalette && initialDithering) initialDithering.disabled = initialPalette.value === '256';
   fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => button.addEventListener('click', () => {
     const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
     if (!quality) return;
@@ -277,8 +284,9 @@ function estimateKey(file: File, tool: string): string {
   const setting = tool === 'Reduce PDF File Size' ? 'pdfQuality' : 'quality';
   const slider = toolForm.elements.namedItem(setting) as HTMLInputElement | null;
   const palette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
+  const dither = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
   const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
-  return `${tool}|${file.name}|${file.size}|${file.lastModified}|${slider?.value ?? ''}|${palette?.value ?? ''}|${target?.value ?? ''}`;
+  return `${tool}|${file.name}|${file.size}|${file.lastModified}|${slider?.value ?? ''}|${palette?.value ?? ''}|${dither?.value ?? ''}|${target?.value ?? ''}`;
 }
 
 function updateTargetReduction(): void {
@@ -357,7 +365,7 @@ function renderComparison(file: File, output?: EngineOutput): void {
   const handle = document.createElement('span'); handle.className = 'comparison-handle'; handle.textContent = '↔'; handle.setAttribute('aria-hidden', 'true');
   const beforeBadge = document.createElement('span'); beforeBadge.className = 'comparison-badge comparison-badge-before'; beforeBadge.textContent = 'Original'; beforeBadge.setAttribute('aria-hidden', 'true');
   const afterBadge = document.createElement('span'); afterBadge.className = 'comparison-badge comparison-badge-after'; afterBadge.textContent = output ? 'Compressed' : 'Preview loading…'; afterBadge.setAttribute('aria-hidden', 'true');
-  const update = () => { const right = 100 - Number(range.value); afterClip.style.clipPath = `inset(0 ${right}% 0 0)`; divider.style.left = `${range.value}%`; handle.style.left = `${range.value}%`; };
+  const update = () => { afterClip.style.clipPath = `inset(0 0 0 ${range.value}%)`; divider.style.left = `${range.value}%`; handle.style.left = `${range.value}%`; };
   range.addEventListener('input', update);
   comparison.append(original, afterClip, divider, beforeBadge, afterBadge, handle, range);
   preview.replaceChildren(comparison);
