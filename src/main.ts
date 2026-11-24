@@ -41,30 +41,18 @@ const tools: Tool[] = [
 ];
 
 const grid = document.querySelector<HTMLDivElement>('#toolGrid')!;
-const count = document.querySelector<HTMLElement>('#toolCount')!;
-const search = document.querySelector<HTMLInputElement>('#toolSearch')!;
-const empty = document.querySelector<HTMLDivElement>('#emptyState')!;
 const dialog = document.querySelector<HTMLDialogElement>('#toolDialog')!;
 const dialogTitle = document.querySelector<HTMLElement>('#dialogTitle')!;
 const dialogIcon = document.querySelector<HTMLElement>('#dialogIcon')!;
 const dialogDescription = document.querySelector<HTMLElement>('#dialogDescription')!;
-let activeFilter = 'All';
-
 function renderTools(): void {
-  const query = search.value.trim().toLowerCase();
-  const visible = tools.filter((tool) =>
-    (activeFilter === 'All' || tool.category === activeFilter) && tool.name.toLowerCase().includes(query),
-  );
-  count.textContent = String(visible.length);
-  grid.innerHTML = visible.map((tool) => {
+  grid.innerHTML = tools.map((tool) => {
     const index = tools.indexOf(tool);
     return `<button class="tool-card" type="button" aria-label="View status for ${tool.name}" data-index="${index}">
       <span class="card-top"><span class="tool-illustration" aria-hidden="true">${inlineIcon(tool.icon, `card-${index}`)}</span><span class="tool-tag">${tool.tag}</span></span>
       <span class="tool-name">${tool.name}</span><span class="card-arrow" aria-hidden="true">↗</span>
     </button>`;
   }).join('');
-  empty.hidden = visible.length !== 0;
-  grid.hidden = visible.length === 0;
   grid.querySelectorAll<HTMLButtonElement>('.tool-card').forEach((card) => {
     card.addEventListener('click', () => void openTool(tools[Number(card.dataset.index)]));
   });
@@ -93,22 +81,6 @@ function inlineIcon(markup: string, prefix: string): string {
       `aria-labelledby="${ids.split(/\s+/).map((id) => `${prefix}-${id}`).join(' ')}"`);
 }
 
-document.querySelectorAll<HTMLButtonElement>('.filter').forEach((button) => {
-  button.addEventListener('click', () => {
-    document.querySelector('.filter.active')?.classList.remove('active');
-    button.classList.add('active');
-    activeFilter = button.dataset.filter ?? 'All';
-    renderTools();
-  });
-});
-search.addEventListener('input', renderTools);
-document.querySelector<HTMLButtonElement>('#clearSearch')!.addEventListener('click', () => {
-  search.value = '';
-  activeFilter = 'All';
-  document.querySelector('.filter.active')?.classList.remove('active');
-  document.querySelector<HTMLButtonElement>('[data-filter="All"]')!.classList.add('active');
-  renderTools();
-});
 document.querySelector<HTMLButtonElement>('#dialogClose')!.addEventListener('click', () => dialog.close());
 if (!('closedBy' in HTMLDialogElement.prototype)) {
   let pressedOutside = false;
@@ -125,12 +97,6 @@ if (!('closedBy' in HTMLDialogElement.prototype)) {
   dialog.addEventListener('pointercancel', () => { pressedOutside = false; });
 }
 document.querySelector<HTMLButtonElement>('#dialogSubmit')!.addEventListener('click', () => dialog.close());
-document.addEventListener('keydown', (event) => {
-  if (event.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName ?? '') && !dialog.open) {
-    event.preventDefault();
-    search.focus();
-  }
-});
 document.querySelector<HTMLButtonElement>('#menuButton')!.addEventListener('click', () => {
   document.querySelector('#tools')?.scrollIntoView({ behavior: 'smooth' });
 });

@@ -11,19 +11,13 @@
 <body>
   <header class="topbar">
     <a class="brand" href="#top" aria-label="Paperplane home"><span class="brand-mark"><svg viewBox="0 0 32 32" fill="none"><path d="M27 5 14.8 27l-3.2-9.6L5 14.2 27 5Z" fill="currentColor"/><path d="m11.6 17.4 8-7.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span><span>paperplane<span class="brand-dot">.</span></span></a>
-    <nav class="main-nav" aria-label="Main navigation"><a class="nav-active" href="#tools">All tools</a></nav>
     <div class="header-actions"><button class="icon-btn" aria-label="Open menu" id="menuButton"><svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><a class="header-cta" href="#tools">Explore tools <span>↗</span></a></div>
   </header>
 
   <main id="top">
     <section class="tool-section" id="tools">
-      <div class="section-heading"><div><div class="eyebrow section-eyebrow"><span class="eyebrow-spark">✳</span> PAPERPLANE TOOLS</div><h2>What can we help <span>with?</span></h2><p>Choose a tool for your photo or PDF.</p></div><div class="tool-count"><span id="toolCount">17</span> tools <span class="count-star">✳</span></div></div>
-      <div class="tool-controls">
-        <div class="search-box"><svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.7" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.1 4.1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><input id="toolSearch" type="search" placeholder="Search all tools..." aria-label="Search tools" /><kbd>/</kbd></div>
-        <div class="filters" role="group" aria-label="Filter tools"><button class="filter active" data-filter="All">All tools <span>17</span></button><button class="filter" data-filter="Images">Images</button><button class="filter" data-filter="PDFs">PDFs</button><button class="filter" data-filter="Signatures">Signatures</button></div>
-      </div>
+      <div class="section-heading"><div><h2>What can we help <span>with?</span></h2><p>Choose a tool for your photo or PDF.</p></div></div>
       <div class="tool-grid" id="toolGrid"></div>
-      <div class="empty-state" id="emptyState" hidden><span>⌕</span><h3>No tools found</h3><p>Try another search or choose a different category.</p><button id="clearSearch">Clear filters</button></div>
     </section>
 
   </main>
