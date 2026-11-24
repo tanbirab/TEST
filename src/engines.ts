@@ -101,8 +101,8 @@ async function mozJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Arra
   return encodeMozJpeg(context.getImageData(0, 0, canvas.width, canvas.height), quality);
 }
 
-function mozJpegFile(file: File, quality: number, whiteBackground = false): Promise<ArrayBuffer> {
-  return encodeMozJpegFile(file, quality, whiteBackground);
+function mozJpegFile(file: File, quality: number, whiteBackground = false, paletteColors = 256): Promise<ArrayBuffer> {
+  return encodeMozJpegFile(file, quality, whiteBackground, paletteColors);
 }
 
 async function compressImage(file: File, form: HTMLFormElement, report: RunInput['report'], signature: boolean): Promise<EngineOutput> {
@@ -116,14 +116,15 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
 
   const whiteBackground = signature;
   const targetKb = Number(value(form, 'targetKb', '0'));
+  const paletteColors = Number(value(form, 'paletteColors', '256'));
   const startQuality = Number(value(form, 'quality', '82')) / 100;
   report(targetKb > 0 ? 'Finding a quality close to your target…' : 'Encoding a compact JPEG in your browser…');
-  let best = await mozJpegFile(file, startQuality, whiteBackground);
+  let best = await mozJpegFile(file, startQuality, whiteBackground, paletteColors);
   if (targetKb > 0 && best.byteLength > targetKb * 1024) {
     const targetBytes = targetKb * 1024;
     const floor = 0.12;
     const firstQuality = Math.max(floor, startQuality * Math.sqrt(targetBytes / best.byteLength));
-    let first = await mozJpegFile(file, firstQuality, whiteBackground);
+    let first = await mozJpegFile(file, firstQuality, whiteBackground, paletteColors);
     let smallest = first.byteLength < best.byteLength ? first : best;
     let fit: { bytes: ArrayBuffer; quality: number } | undefined = first.byteLength <= targetBytes ? { bytes: first, quality: firstQuality } : undefined;
 
@@ -133,7 +134,7 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
       ? (firstQuality + startQuality) / 2
       : Math.max(floor, firstQuality * Math.sqrt(targetBytes / first.byteLength));
     if (refineQuality !== firstQuality) {
-      const refined = await mozJpegFile(file, refineQuality, whiteBackground);
+      const refined = await mozJpegFile(file, refineQuality, whiteBackground, paletteColors);
       if (refined.byteLength < smallest.byteLength) smallest = refined;
       if (refined.byteLength <= targetBytes && (!fit || refineQuality > fit.quality)) fit = { bytes: refined, quality: refineQuality };
     }
