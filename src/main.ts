@@ -52,7 +52,7 @@ function renderTools(): void {
   grid.innerHTML = visibleTools.map((tool) => {
     const index = tools.indexOf(tool);
     return `<button class="tool-card" type="button" aria-label="View status for ${tool.name}" data-index="${index}">
-      <span class="card-top"><span class="tool-illustration" aria-hidden="true">${inlineIcon(tool.icon, `card-${index}`)}</span><span class="tool-tag">${tool.tag}</span></span>
+      <span class="card-top"><span class="tool-illustration" aria-hidden="true">${inlineIcon(tool.icon, `card-${index}`)}</span></span>
       <span class="tool-name">${tool.name}</span><span class="card-arrow" aria-hidden="true">↗</span>
     </button>`;
   }).join('');
