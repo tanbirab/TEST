@@ -253,19 +253,16 @@ function renderComparison(file: File, output: EngineOutput): void {
   const compressed = document.createElement('img'); compressed.src = outputPreviewUrl; compressed.alt = 'Image after applying the current compression settings';
   afterClip.append(compressed);
   const divider = document.createElement('div'); divider.className = 'comparison-divider'; divider.setAttribute('aria-hidden', 'true');
-  const rangeLabel = document.createElement('label'); rangeLabel.className = 'comparison-control';
-  const rangeText = document.createElement('span'); rangeText.textContent = 'Drag to compare original and compressed image';
-  const range = document.createElement('input'); range.type = 'range'; range.min = '0'; range.max = '100'; range.value = '50'; range.setAttribute('aria-label', rangeText.textContent);
-  rangeLabel.append(rangeText);
-  rangeLabel.append(range);
-  const update = () => { const right = 100 - Number(range.value); afterClip.style.clipPath = `inset(0 ${right}% 0 0)`; divider.style.left = `${range.value}%`; };
+  const range = document.createElement('input'); range.className = 'comparison-range'; range.type = 'range'; range.min = '0'; range.max = '100'; range.value = '50'; range.setAttribute('aria-label', 'Drag across the image to compare original and compressed versions');
+  const handle = document.createElement('span'); handle.className = 'comparison-handle'; handle.textContent = '↔'; handle.setAttribute('aria-hidden', 'true');
+  const beforeBadge = document.createElement('span'); beforeBadge.className = 'comparison-badge comparison-badge-before'; beforeBadge.textContent = 'Original'; beforeBadge.setAttribute('aria-hidden', 'true');
+  const afterBadge = document.createElement('span'); afterBadge.className = 'comparison-badge comparison-badge-after'; afterBadge.textContent = 'Compressed'; afterBadge.setAttribute('aria-hidden', 'true');
+  const update = () => { const right = 100 - Number(range.value); afterClip.style.clipPath = `inset(0 ${right}% 0 0)`; divider.style.left = `${range.value}%`; handle.style.left = `${range.value}%`; };
   range.addEventListener('input', update);
-  const labels = document.createElement('div'); labels.className = 'comparison-labels';
-  const beforeLabel = document.createElement('span'); beforeLabel.textContent = `Original · ${formatBytes(file.size)}`;
-  const afterLabel = document.createElement('span'); afterLabel.textContent = `Compressed · ${formatBytes(output.blob.size)}`;
-  labels.append(beforeLabel, afterLabel);
-  comparison.append(original, afterClip, divider);
-  preview.replaceChildren(rangeLabel, comparison, labels);
+  comparison.append(original, afterClip, divider, beforeBadge, afterBadge, handle, range);
+  preview.replaceChildren(comparison);
+  const estimate = fields.querySelector<HTMLOutputElement>('#sizeEstimate');
+  if (estimate) estimate.value = `${formatBytes(file.size)} → ${formatBytes(output.blob.size)}`;
   update();
 }
 
