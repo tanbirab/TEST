@@ -243,8 +243,7 @@ async function pdfTask(input: RunInput): Promise<EngineOutput[]> {
     if (/\/ByteRange\s*\[/.test(new TextDecoder('latin1').decode(bytes))) throw new Error('This PDF contains a digital signature. Ghostscript rewrites the PDF and would invalidate it, so the signed file was left untouched.');
     report('Loading the isolated Ghostscript PDF compressor…');
     const { compressPdfWithGhostscript } = await import('./ghostscript-compressor');
-    report('Recompressing and downsampling PDF images locally…');
-    return [await compressPdfWithGhostscript(file, pdfQuality)];
+    return [await compressPdfWithGhostscript(file, pdfQuality, report)];
   }
   if (tool === 'Convert PDF to JPG') {
     report('Rendering PDF pages with PDF.js…');
