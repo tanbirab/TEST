@@ -93,7 +93,6 @@ body{background:#f2f6fc}
 html,body{min-height:100%;background:#edf4ff!important}
 body{position:relative;isolation:isolate;background:transparent!important}
 body::before{content:""!important;display:block!important;position:fixed;inset:0;z-index:0;pointer-events:none;background-color:#edf4ff;background-image:radial-gradient(ellipse at 14% 2%,rgba(255,205,184,.42),transparent 40%),radial-gradient(ellipse at 82% 6%,rgba(149,192,247,.38),transparent 45%),radial-gradient(ellipse at 52% 52%,rgba(255,231,218,.26),transparent 52%),repeating-linear-gradient(90deg,#6689b526 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b520 0 1px,transparent 1px 88px)}
-body>*{position:relative;z-index:1}
 .topbar{position:sticky;top:0;z-index:5;background:transparent!important;background-image:none!important;backdrop-filter:none!important;border-bottom:0;box-shadow:none}
 .tool-section{background:transparent!important;background-image:none!important}
 
@@ -173,3 +172,20 @@ body{background:#edf4ff}
 .dialog-icon img{display:block;width:100%;height:100%;object-fit:contain}
 @media(max-width:650px){.tool-illustration{width:48px;height:48px}}
 footer{border-top:0}
+
+/* Keep the page texture in normal document painting to avoid fixed-layer flashes. */
+html{background:#edf4ff!important}
+body{
+  position:static!important;
+  isolation:auto!important;
+  background-color:#edf4ff!important;
+  background-image:radial-gradient(ellipse at 15% 8%,rgba(255,210,190,.38),transparent 38%),radial-gradient(ellipse at 82% 5%,rgba(149,192,247,.34),transparent 43%),radial-gradient(ellipse at 52% 35%,rgba(255,231,218,.24),transparent 50%),repeating-linear-gradient(90deg,#6689b522 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b51c 0 1px,transparent 1px 88px)!important;
+  background-attachment:scroll!important;
+}
+body::before{content:none!important;display:none!important}
+.topbar,.tool-count,.search-box,.filters,.trust-strip,.tool-card{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+.tool-card{background:#fff!important}
+.tool-card:hover{transform:none!important;background:#fff!important}
