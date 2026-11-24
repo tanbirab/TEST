@@ -14,9 +14,9 @@ importers:
       '@jsquash/oxipng':
         specifier: ^2.3.0
         version: 2.3.0
-      '@wasm-zoo/qpdf':
-        specifier: ^0.1.1
-        version: 0.1.1
+      '@wasm-zoo/ghostscript':
+        specifier: ^0.7.2
+        version: 0.7.2
       asn1js:
         specifier: ^4.1.0
         version: 4.1.0
@@ -806,8 +806,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@wasm-zoo/qpdf@0.1.1':
-    resolution: {integrity: sha512-smxfhQPwUYJtvfze69TXyYK4otc9femdxf+jxTf7seuuAbbbYsbVSftK9vL1m2Xfgk6PwmZmWdvlbyyz5fzfOA==}
+  '@wasm-zoo/ghostscript@0.7.2':
+    resolution: {integrity: sha512-hdrEwyyYoyRbJya/sXvPpziIDRg1kuuAHPdlNg1S/bYpWVckiD1MzWqS2Lka86Yh5xSezl+gm/RfFKP3foNXYw==}
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -1737,7 +1737,7 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@wasm-zoo/qpdf@0.1.1': {}
+  '@wasm-zoo/ghostscript@0.7.2': {}
 
   abort-controller@3.0.0:
     dependencies:

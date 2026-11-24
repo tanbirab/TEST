@@ -237,18 +237,14 @@ async function pdfTask(input: RunInput): Promise<EngineOutput[]> {
   ensureFiles(files, 'pdf', tool === 'Merge PDF Files');
   const file = files[0]; const stem = safeStem(file.name);
   if (tool === 'Reduce PDF File Size') {
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    if (/\/ByteRange\s*\[/.test(new TextDecoder('latin1').decode(bytes))) throw new Error('This PDF contains a digital signature. Compression can invalidate it, so the signed file was left untouched.');
     const pdfQuality = Math.round(numberValue(form, 'pdfQuality', 82));
     if (pdfQuality < 35 || pdfQuality > 95) throw new Error('Image quality must be from 35 to 95.');
-    report('Optimizing PDF streams and images locally with qpdf…');
-    const { load } = await import('@wasm-zoo/qpdf'); const qpdf = await load();
-    try {
-      const result = await qpdf.exec(['--object-streams=generate', '--recompress-flate', '--compression-level=9', '--optimize-images', `--jpeg-quality=${pdfQuality}`, '/input.pdf', '/output.pdf'], { files: [{ name: '/input.pdf', data: bytes }], outputs: ['/output.pdf'] });
-      if (!result.files[0]?.data) throw new Error('qpdf returned no compressed PDF.');
-      if (result.files[0].data.byteLength >= bytes.byteLength) throw new Error('qpdf could not make this file smaller. It may contain mostly compressed or embedded image data, which this structural optimizer leaves unchanged.');
-      return [output(`${stem}-compressed.pdf`, result.files[0].data, 'application/pdf')];
-    } finally { qpdf.dispose(); }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (/\/ByteRange\s*\[/.test(new TextDecoder('latin1').decode(bytes))) throw new Error('This PDF contains a digital signature. Ghostscript rewrites the PDF and would invalidate it, so the signed file was left untouched.');
+    report('Loading the isolated Ghostscript PDF compressor…');
+    const { compressPdfWithGhostscript } = await import('./ghostscript-compressor');
+    report('Recompressing and downsampling PDF images locally…');
+    return [await compressPdfWithGhostscript(file, pdfQuality)];
   }
   if (tool === 'Convert PDF to JPG') {
     report('Rendering PDF pages with PDF.js…');
