@@ -44,6 +44,46 @@ TypeScript must not implement file transformations. It should pass selected byte
 
 These names describe the visible catalog. They do not establish that the tools work or that particular formats or guarantees are supported. Update this status and document verified capabilities as actual Rust implementations are added.
 
+## Product decisions and working context
+
+### Product and visual direction
+
+- The user-facing brand is **Paperplane**; the project/repository is **ProjectPDF**.
+- Keep the 17 tools visible immediately on the landing page. Do not add a large hero section above the tool catalog.
+- Use the brand colors red `#D14836`, gold `#ECD06F`, and white, with a light blue tint and soft warm light in the background.
+- The grid and warm/cool gradient should be one continuous page background behind the header, tool catalog, and lower sections. Do not give the header or catalog a separate opaque background block. Keep cards and controls readable against it.
+
+### Processing and privacy direction
+
+- The preferred product direction is local, browser-side processing so user files are not uploaded to a processing server. Do not claim this is implemented until each operation actually runs locally.
+- The user wants implementation details and exam presets to remain proprietary. Keep rule data out of static frontend bundles; however, anything delivered to a browser (JavaScript, WebAssembly, worker code, or decrypted data) can ultimately be inspected. Obfuscation, domain checks, signed URLs, Turnstile, and rate limits may deter casual copying or scraping, but cannot make downloaded client-side processing code absolutely secret.
+- Do not store uploaded file contents or decrypted presets in persistent browser storage or global application state. If remote preset delivery is added, return only the requested record and protect the endpoint with appropriate authentication/rate controls. Treat encryption in the browser as a deterrent to casual inspection, not a way to hide data from the browser user.
+
+### Processing engine direction (proposed, not implemented)
+
+These were the engines discussed for the 17 tools. They are a planning map, not confirmed dependencies or working capabilities. Check browser/Wasm compatibility, maintenance, output quality, and each license before adopting them.
+
+| Tool(s) | Engine direction discussed |
+| --- | --- |
+| Reduce Photo File Size; Convert Photo to JPG | MozJPEG; target-size search for compression. Optional HEIC support would need a compatible decoder. |
+| Reduce PDF File Size | A separate Ghostscript/Wasm compression component for stronger quality/size control. Keep its source and license obligations isolated from the rest of the website. A qpdf-wasm lossless cleanup pass was also discussed as an optional distinct pass; it is not a substitute for image recompression. |
+| Reduce Signature File Size | OxiPNG for lossless PNG output, or MozJPEG when using a white background. |
+| Change Signature Width & Height; Change Photo Width & Height | Pica for image resizing. |
+| Make PDF from Photos; Merge PDF Files; Split PDF; Delete PDF Pages; Sign PDF placement; Put Many Pages on One Page | pdf-lib was discussed for PDF creation and page operations. |
+| Crop Photo | Cropper.js for crop interaction, with output rendered at the source pixel resolution. |
+| Make Passport Size Photo; Add Name & Date on Photo | Canvas for sheet layout and text rendering; Pica for image resizing. Use appropriately licensed fonts. |
+| Convert PDF to JPG | PDF.js for page rendering, then MozJPEG or OxiPNG for image output. |
+| Verify PDF Signature | Parse signature fields and byte ranges, then use PKI.js/asn1js for cryptographic validation. Merely reading a signature field is not verification. |
+
+**PDF compression is intentionally a separate component.** If the Ghostscript/Wasm portion is open-sourced, publish and comply with the license for that component. Keeping the rest of the website in a separate repository/component does not by itself remove obligations triggered by how the Ghostscript component is distributed or linked. Confirm the applicable Ghostscript license and distribution model before release; do not copy or modify its code to evade licensing.
+
+Do not present the planned engine choices as settled technical facts in the product UI. The user should see the result and controls (for example, target size, quality, dimensions, or page selection), while implementation details remain documented here for maintainers.
+
+### Deployment and capacity questions
+
+- The user has explored local processing versus server-side processing and whether individual tools could move to a server later. Any future server-side processing would need a deliberate privacy, retention, and operational-cost decision; the current product requirement remains local-only processing.
+- Earlier Cloud Run capacity and free-tier estimates were discussion topics, not established capacity guarantees. Do not promise a user count without workload benchmarks and current provider limits.
+
 ## Development setup
 
 Requirements:
