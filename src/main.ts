@@ -43,7 +43,8 @@ const tools: Tool[] = [
 ];
 
 const grid = document.querySelector<HTMLDivElement>('#toolGrid')!;
-const dialog = document.querySelector<HTMLDialogElement>('#toolDialog')!;
+const catalog = document.querySelector<HTMLElement>('#tools')!;
+const toolPage = document.querySelector<HTMLElement>('#toolPage')!;
 const dialogTitle = document.querySelector<HTMLElement>('#dialogTitle')!;
 const dialogIcon = document.querySelector<HTMLElement>('#dialogIcon')!;
 const dialogDescription = document.querySelector<HTMLElement>('#dialogDescription')!;
@@ -55,6 +56,9 @@ let activeFilter: Category | 'All' = 'All';
 let activeTool: Tool | undefined;
 let cropper: Cropper | undefined;
 let previewUrl: string | undefined;
+let estimateTimer = 0;
+let estimateVersion = 0;
+let estimateCache: { key: string; outputs: EngineOutput[] } | undefined;
 
 function renderTools(): void {
   const visibleTools = activeFilter === 'All' ? tools : tools.filter((tool) => tool.category === activeFilter);
@@ -80,7 +84,7 @@ document.querySelectorAll<HTMLButtonElement>('.filter').forEach((button) => {
 });
 
 function fileInput(label: string, accept: string, multiple = false, id = 'sourceFiles'): string {
-  return `<div class="engine-field"><label for="${id}">${label}</label><input id="${id}" name="${id}" type="file" accept="${accept}" ${multiple ? 'multiple' : ''} required><small>Files stay on this device. Maximum 100 MB per file.</small></div>`;
+  return `<div class="engine-field"><span class="upload-label">${label}</span><label class="upload-zone" for="${id}"><span class="upload-symbol" aria-hidden="true">↑</span><b>Drop ${multiple ? 'files' : 'a file'} here or browse</b><small>Files stay on this device · Maximum 100 MB per file</small><input id="${id}" name="${id}" type="file" accept="${accept}" ${multiple ? 'multiple' : ''} required></label></div>`;
 }
 
 function pageField(label = 'Pages', defaultValue = ''): string {
@@ -93,7 +97,7 @@ function numericField(id: string, label: string, value: number, min = 1): string
 
 function workflowMarkup(tool: Tool): string {
   const name = tool.name;
-  if (name === 'Reduce Photo File Size') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality</label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>Higher quality makes a larger file.</small></div><div class="engine-field"><label for="targetKb">Optional target size (KB)</label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="Leave blank to use quality"></div><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Reduce Photo File Size') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>Lower quality usually produces a smaller file.</small></div><div class="engine-field"><label for="targetKb">Optional target size (KB)</label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="Leave blank to use quality"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to estimate the output size.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<p class="engine-hint">PNG stays transparent and is optimized losslessly. Other formats are saved as JPEG with a white background.</p><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Change Photo Width & Height' || name === 'Change Signature Width & Height') return `${fileInput(name.includes('Signature') ? 'Choose a signature image' : 'Choose a photo', 'image/*')}${numericField('width', 'Width (pixels)', 800)}${numericField('height', 'Height (pixels)', 600)}<div id="filePreview" class="file-preview"></div>`;
   if (name === 'Convert Photo to JPG') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality</label><input id="quality" name="quality" type="range" min="20" max="100" value="90"></div><div id="filePreview" class="file-preview"></div>`;
@@ -101,7 +105,7 @@ function workflowMarkup(tool: Tool): string {
   if (name === 'Make Passport Size Photo') return `${fileInput('Choose a photo', 'image/*')}${numericField('widthMm', 'Print width (mm)', 35)}${numericField('heightMm', 'Print height (mm)', 45)}<p class="engine-hint">Exports one photo at 300 DPI using the dimensions above.</p><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Add Name & Date on Photo') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="photoName">Name (optional)</label><input id="photoName" name="photoName" maxlength="120"></div><div class="engine-field"><label for="photoDate">Date (optional)</label><input id="photoDate" name="photoDate" type="date"></div><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Make PDF from Photos') return `${fileInput('Choose photos', 'image/*', true)}<div id="filePreview" class="file-preview"></div>`;
-  if (name === 'Reduce PDF File Size') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}<div class="engine-field"><label for="pdfQuality">Image quality</label><input id="pdfQuality" name="pdfQuality" type="range" min="35" max="95" value="60"><small>Lower quality reduces image resolution more. If needed, the tool tries stronger settings until it finds a smaller file.</small></div><p class="engine-hint">Uses Ghostscript locally. Signed PDFs are left untouched because rewriting invalidates digital signatures.</p><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Reduce PDF File Size') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}<div class="engine-field"><label for="pdfQuality">Image quality <output id="qualityValue" for="pdfQuality">60%</output></label><input id="pdfQuality" name="pdfQuality" type="range" min="35" max="95" value="60"><small>Lower quality reduces image resolution more. The preview runs the same local compression as the final file.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a PDF to estimate the output size.</output><p class="engine-hint">Uses Ghostscript locally. Signed PDFs are left untouched because rewriting invalidates digital signatures.</p><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Merge PDF Files') return `${fileInput('Choose PDFs to merge', 'application/pdf,.pdf', true)}<div id="filePreview" class="file-preview"></div>`;
   if (name === 'Split PDF' || name === 'Delete PDF Pages') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}${pageField(name === 'Split PDF' ? 'Pages to extract' : 'Pages to delete')}<div id="filePreview" class="file-preview"></div>`;
   if (name === 'Convert PDF to JPG') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}${pageField('Pages to convert (optional)')}<div class="engine-field"><label for="quality">JPEG quality</label><input id="quality" name="quality" type="range" min="30" max="100" value="88"></div><div id="filePreview" class="file-preview"></div>`;
@@ -111,18 +115,56 @@ function workflowMarkup(tool: Tool): string {
   return '';
 }
 
-function openTool(tool: Tool): void {
-  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = '';
+function openTool(tool: Tool, navigate = true): void {
+  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; window.clearTimeout(estimateTimer); estimateVersion += 1;
   dialogTitle.textContent = tool.name;
   dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
   dialogDescription.textContent = tool.description;
   fields.innerHTML = workflowMarkup(tool);
   status.textContent = 'Choose your file and settings. Processing runs in your browser.';
   submit.textContent = 'Run tool'; submit.disabled = false;
-  dialog.showModal();
+  catalog.hidden = true; toolPage.hidden = false;
+  if (navigate) history.pushState({ paperplaneTool: true }, '', `#tool/${toolSlug(tool)}`);
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  dialogTitle.focus({ preventScroll: true });
   const fileInputElement = toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null;
-  fileInputElement?.addEventListener('change', () => void showSelectedFiles(fileInputElement.files ? [...fileInputElement.files] : []));
+  fileInputElement?.addEventListener('change', () => { void showSelectedFiles(fileInputElement.files ? [...fileInputElement.files] : []); requestEstimate(); });
+  fields.querySelectorAll<HTMLInputElement>('input[type="range"], input[type="number"]').forEach((input) => input.addEventListener('input', () => { const out = fields.querySelector<HTMLOutputElement>('#qualityValue'); if (out && input.type === 'range') { out.value = `${input.value}%`; input.setAttribute('aria-valuetext', `${input.value} percent quality`); } requestEstimate(); }));
+  fields.querySelectorAll<HTMLLabelElement>('.upload-zone').forEach((zone) => {
+    zone.addEventListener('dragover', (event) => { event.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', (event) => {
+      event.preventDefault(); zone.classList.remove('dragover');
+      const input = zone.querySelector<HTMLInputElement>('input[type="file"]');
+      if (!input || !event.dataTransfer?.files.length) return;
+      input.files = event.dataTransfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
 }
+
+function toolSlug(tool: Tool): string { return tool.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''); }
+
+function renderRoute(): void {
+  const match = location.hash.match(/^#tool\/(.+)$/);
+  const selected = match ? tools.find((tool) => toolSlug(tool) === match[1]) : undefined;
+  if (selected) {
+    if (activeTool !== selected || toolPage.hidden) openToolFromHistory(selected);
+    return;
+  }
+  activeTool = undefined; toolPage.hidden = true; catalog.hidden = false; releasePreview();
+}
+
+function openToolFromHistory(tool: Tool): void {
+  openTool(tool, false);
+}
+
+document.querySelector<HTMLButtonElement>('#toolBack')!.addEventListener('click', () => {
+  if (history.state?.paperplaneTool) history.back();
+  else { history.replaceState(null, '', '#tools'); renderRoute(); catalog.scrollIntoView({ behavior: 'smooth' }); }
+});
+window.addEventListener('popstate', renderRoute);
+window.addEventListener('hashchange', renderRoute);
 
 async function showSelectedFiles(files: File[]): Promise<void> {
   const preview = fields.querySelector<HTMLDivElement>('#filePreview');
@@ -142,10 +184,52 @@ async function showSelectedFiles(files: File[]): Promise<void> {
   if (widthField && heightField) { widthField.value = String(imageView.naturalWidth); heightField.value = String(imageView.naturalHeight); }
   if (activeTool?.name === 'Crop Photo') {
     const { default: CropperConstructor } = await import('cropperjs');
-    if (!dialog.open || activeTool?.name !== 'Crop Photo') return;
+    if (toolPage.hidden || activeTool?.name !== 'Crop Photo') return;
     cropper = new CropperConstructor(imageView, { viewMode: 1, autoCropArea: 0.82, responsive: true, ready: () => { toolForm.dataset.crop = JSON.stringify(cropper!.getData(true)); } });
     imageView.addEventListener('cropend', () => { if (cropper) toolForm.dataset.crop = JSON.stringify(cropper.getData(true)); });
   }
+}
+
+function estimateKey(file: File, tool: string): string {
+  const setting = tool === 'Reduce PDF File Size' ? 'pdfQuality' : 'quality';
+  const slider = toolForm.elements.namedItem(setting) as HTMLInputElement | null;
+  const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
+  return `${tool}|${file.name}|${file.size}|${file.lastModified}|${slider?.value ?? ''}|${target?.value ?? ''}`;
+}
+
+function requestEstimate(): void {
+  if (!activeTool || !['Reduce Photo File Size', 'Reduce PDF File Size'].includes(activeTool.name)) return;
+  const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
+  const estimate = fields.querySelector<HTMLOutputElement>('#sizeEstimate');
+  if (!file || !estimate) return;
+  const key = estimateKey(file, activeTool.name);
+  if (estimateCache?.key === key) { showEstimate(estimate, file, estimateCache.outputs); return; }
+  window.clearTimeout(estimateTimer);
+  const version = ++estimateVersion;
+  estimate.value = 'Estimating output size…';
+  estimateTimer = window.setTimeout(async () => {
+    const tool = activeTool;
+    if (!tool) return;
+    const outputFiles = (toolForm.elements.namedItem('signatureFile') as HTMLInputElement | null)?.files;
+    try {
+      const outputs = await runEngine({ tool: tool.name, files: [file], extraFiles: outputFiles ? [...outputFiles] : [], form: toolForm, report: (message) => { if (version === estimateVersion) estimate.value = message; } });
+      if (version !== estimateVersion) return;
+      estimateCache = { key, outputs }; showEstimate(estimate, file, outputs);
+    } catch (error) {
+      if (version !== estimateVersion) return;
+      estimateCache = undefined;
+      estimate.value = error instanceof Error ? `Estimate unavailable: ${error.message}` : 'Estimate unavailable. The selected file will be checked when processed.';
+    }
+  }, 600);
+}
+
+function formatBytes(bytes: number): string { return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(2)} MB` : `${(bytes / 1024).toFixed(0)} KB`; }
+function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOutput[]): void {
+  const bytes = outputs.reduce((total, output) => total + output.blob.size, 0);
+  const ratio = Math.round((1 - bytes / file.size) * 100);
+  estimate.value = bytes < file.size
+    ? `Estimated output: ${formatBytes(bytes)} · about ${ratio}% smaller`
+    : `Estimated output: ${formatBytes(bytes)} · this may be larger than the original`;
 }
 
 function releasePreview(): void {
@@ -163,7 +247,9 @@ toolForm.addEventListener('submit', async (event) => {
   const extra = signature ? [...signature] : roots ? [...roots] : [];
   submit.disabled = true; submit.textContent = 'Working…'; status.textContent = 'Preparing local processing…';
   try {
-    const outputs: EngineOutput[] = await runEngine({
+    const source = files?.[0];
+    const cached = source && estimateCache?.key === estimateKey(source, activeTool.name) ? estimateCache.outputs : undefined;
+    const outputs: EngineOutput[] = cached ?? await runEngine({
       tool: activeTool.name,
       files: files ? [...files] : [],
       extraFiles: extra,
@@ -189,7 +275,5 @@ function inlineIcon(markup: string, prefix: string): string {
       `aria-labelledby="${ids.split(/\s+/).map((id) => `${prefix}-${id}`).join(' ')}"`);
 }
 
-document.querySelector<HTMLButtonElement>('#dialogClose')!.addEventListener('click', () => dialog.close());
-dialog.addEventListener('close', releasePreview);
-dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
 renderTools();
+renderRoute();

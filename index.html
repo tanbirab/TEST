@@ -22,23 +22,20 @@
       <div class="tool-grid" id="toolGrid"></div>
     </section>
 
+    <section id="toolPage" class="tool-page" hidden aria-labelledby="dialogTitle">
+      <button class="tool-back" id="toolBack" type="button">← All tools</button>
+      <div class="tool-page-heading"><div class="dialog-icon" id="dialogIcon" aria-hidden="true"></div><div><div class="eyebrow">PAPERPLANE TOOL</div><h1 id="dialogTitle" tabindex="-1">Choose a tool</h1><p id="dialogDescription"></p></div></div>
+      <form id="toolForm" class="engine-form">
+        <div id="workflowFields"></div>
+        <p id="toolStatus" class="tool-status" role="status" aria-live="polite">Choose your file and settings. Processing runs in your browser.</p>
+        <button class="dialog-submit" id="dialogSubmit" type="submit">Run tool</button>
+      </form>
+      <p class="privacy-note">Your files are processed locally in this browser.</p>
+    </section>
   </main>
 
   <footer><a class="brand footer-brand" href="#top"><span class="brand-mark"><svg viewBox="0 0 32 32" fill="none"><path d="M27 5 14.8 27l-3.2-9.6L5 14.2 27 5Z" fill="currentColor"/><path d="m11.6 17.4 8-7.8" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg></span><span>paperplane<span class="brand-dot">.</span></span></a><div class="footer-copy"><span>Little tools for everyday files.</span><span class="footer-credit">Creator - TanbirAB</span></div><div class="footer-meta"><span>© 2026 Paperplane</span><a href="./usage-policy.html">Usage policy</a></div></footer>
 
-  <dialog id="toolDialog" class="tool-dialog" aria-labelledby="dialogTitle" closedby="any">
-    <button class="dialog-close" id="dialogClose" type="button" aria-label="Close">×</button>
-    <div class="dialog-icon" id="dialogIcon" aria-hidden="true"></div>
-    <div class="eyebrow">PAPERPLANE TOOL</div>
-    <h2 id="dialogTitle">Choose a tool</h2>
-    <p id="dialogDescription"></p>
-    <form id="toolForm" class="engine-form">
-      <div id="workflowFields"></div>
-      <p id="toolStatus" class="tool-status" role="status" aria-live="polite">Choose your file and settings. Processing runs in your browser.</p>
-      <button class="dialog-submit" id="dialogSubmit" type="submit">Run tool</button>
-    </form>
-    <p class="privacy-note">Your files are processed locally in this browser.</p>
-  </dialog>
   <div class="toast" id="toast" role="status"></div>
   <script type="module" src="/src/main.ts"></script>
 </body>
