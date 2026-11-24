@@ -117,17 +117,27 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
   const whiteBackground = signature;
   const targetKb = Number(value(form, 'targetKb', '0'));
   const startQuality = Number(value(form, 'quality', '82')) / 100;
-  report(targetKb > 0 ? 'Searching for the highest JPEG quality that meets your target…' : 'Encoding a compact JPEG in your browser…');
+  report(targetKb > 0 ? 'Finding a quality close to your target…' : 'Encoding a compact JPEG in your browser…');
   let best = await mozJpegFile(file, startQuality, whiteBackground);
   if (targetKb > 0 && best.byteLength > targetKb * 1024) {
-    let low = 0.12;
-    let high = startQuality;
-    for (let attempt = 0; attempt < 5; attempt += 1) {
-      const quality = (low + high) / 2;
-      const candidate = await mozJpegFile(file, quality, whiteBackground);
-      if (candidate.byteLength <= targetKb * 1024) { best = candidate; low = quality; }
-      else high = quality;
+    const targetBytes = targetKb * 1024;
+    const floor = 0.12;
+    const firstQuality = Math.max(floor, startQuality * Math.sqrt(targetBytes / best.byteLength));
+    let first = await mozJpegFile(file, firstQuality, whiteBackground);
+    let smallest = first.byteLength < best.byteLength ? first : best;
+    let fit: { bytes: ArrayBuffer; quality: number } | undefined = first.byteLength <= targetBytes ? { bytes: first, quality: firstQuality } : undefined;
+
+    // Use one quick refinement instead of a long binary search. File size is
+    // not perfectly linear with JPEG quality, so keep the closest valid result.
+    const refineQuality = first.byteLength <= targetBytes
+      ? (firstQuality + startQuality) / 2
+      : Math.max(floor, firstQuality * Math.sqrt(targetBytes / first.byteLength));
+    if (refineQuality !== firstQuality) {
+      const refined = await mozJpegFile(file, refineQuality, whiteBackground);
+      if (refined.byteLength < smallest.byteLength) smallest = refined;
+      if (refined.byteLength <= targetBytes && (!fit || refineQuality > fit.quality)) fit = { bytes: refined, quality: refineQuality };
     }
+    best = fit?.bytes ?? smallest;
   }
   if (best.byteLength > file.size && !signature) throw new Error('This image is already smaller than the encoded result. Try a lower quality or a different output format.');
   const message = targetKb > 0 && best.byteLength > targetKb * 1024

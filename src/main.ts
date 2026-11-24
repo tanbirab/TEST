@@ -100,7 +100,7 @@ function numericField(id: string, label: string, value: number, min = 1): string
 
 function workflowMarkup(tool: Tool): string {
   const name = tool.name;
-  if (name === 'Reduce Photo File Size') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>Lower quality usually produces a smaller file.</small></div><div class="engine-field"><label for="targetKb">Optional target size (KB)</label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="Leave blank to use quality"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Reduce Photo File Size') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small id="targetReduction">Enter a target size to see the required reduction.</small></div><div class="engine-field"><label for="targetKb">Target size (KB, optional)</label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="Use quality setting"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>PNG files retain transparency and use lossless optimization.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a signature image to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Change Photo Width & Height' || name === 'Change Signature Width & Height') return `${fileInput(name.includes('Signature') ? 'Choose a signature image' : 'Choose a photo', 'image/*')}${numericField('width', 'Width (pixels)', 800)}${numericField('height', 'Height (pixels)', 600)}<div id="filePreview" class="file-preview"></div>`;
   if (name === 'Convert Photo to JPG') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">90%</output></label><input id="quality" name="quality" type="range" min="20" max="100" value="90"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to preview the conversion.</output><div id="filePreview" class="file-preview"></div>`;
@@ -133,7 +133,11 @@ function openTool(tool: Tool, navigate = true): void {
   const fileInputElement = toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null;
   fileInputElement?.addEventListener('change', () => { void showSelectedFiles(fileInputElement.files ? [...fileInputElement.files] : []); requestEstimate(); });
   fields.querySelectorAll<HTMLInputElement>('input[type="range"], input[type="number"]').forEach((input) => {
-    input.addEventListener('input', () => { const out = fields.querySelector<HTMLOutputElement>('#qualityValue'); if (out && input.type === 'range') { out.value = `${input.value}%`; input.setAttribute('aria-valuetext', `${input.value} percent quality`); } });
+    input.addEventListener('input', () => {
+      const out = fields.querySelector<HTMLOutputElement>('#qualityValue');
+      if (out && input.type === 'range') { out.value = `${input.value}%`; input.setAttribute('aria-valuetext', `${input.value} percent quality`); }
+      if (input.name === 'targetKb') updateTargetReduction();
+    });
     input.addEventListener('change', requestEstimate);
   });
   fields.querySelectorAll<HTMLLabelElement>('.upload-zone').forEach((zone) => {
@@ -175,6 +179,7 @@ window.addEventListener('hashchange', renderRoute);
 async function showSelectedFiles(files: File[]): Promise<void> {
   const preview = fields.querySelector<HTMLDivElement>('#filePreview');
   if (!preview || files.length === 0) return;
+  updateTargetReduction();
   releasePreview();
   const summary = document.createElement('p'); summary.className = 'file-summary';
   summary.textContent = files.map((file) => `${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`).join('\n');
@@ -207,6 +212,20 @@ function estimateKey(file: File, tool: string): string {
   const slider = toolForm.elements.namedItem(setting) as HTMLInputElement | null;
   const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
   return `${tool}|${file.name}|${file.size}|${file.lastModified}|${slider?.value ?? ''}|${target?.value ?? ''}`;
+}
+
+function updateTargetReduction(): void {
+  const field = fields.querySelector<HTMLInputElement>('#targetKb');
+  const note = fields.querySelector<HTMLElement>('#targetReduction');
+  if (!field || !note) return;
+  const target = Number(field.value);
+  if (!field.value || !Number.isFinite(target) || target <= 0) { note.textContent = 'Enter a target size to see the required reduction.'; return; }
+  const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
+  if (!file) { note.textContent = `${target} KB target. Choose a photo to calculate the reduction needed.`; return; }
+  const reduction = Math.max(0, Math.min(100, (1 - target * 1024 / file.size) * 100));
+  note.textContent = reduction === 0
+    ? `Your ${target} KB target is already larger than this file.`
+    : `Your ${target} KB target requires about ${Math.ceil(reduction)}% size reduction.`;
 }
 
 function requestEstimate(): void {
