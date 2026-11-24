@@ -341,7 +341,7 @@ function adjustQualityForTarget(): void {
   if (compressedSize) compressedSize.textContent = `~${formatBytes(approximateBytes)}`;
   if (savedPercent) savedPercent.textContent = `${Math.max(0, Math.round((1 - approximateBytes / file.size) * 100))}%`;
   if (estimate) estimate.value = `Updating estimate for your ${formatBytes(targetBytes)} target…`;
-  submit.textContent = `Download ~${formatBytes(approximateBytes)}`;
+  submit.textContent = 'Download';
 }
 
 function requestEstimate(): void {
@@ -443,7 +443,7 @@ function renderComparison(file: File, output?: EngineOutput): void {
   preview.replaceChildren(comparison);
   const estimate = fields.querySelector<HTMLOutputElement>('#sizeEstimate');
   if (estimate) estimate.value = output ? `${formatBytes(file.size)} → ${formatBytes(output.blob.size)}` : 'Preparing live preview…';
-  if (output) submit.textContent = `Download ${formatBytes(output.blob.size)}`;
+  if (output) submit.textContent = 'Download';
   update();
 }
 
@@ -495,7 +495,7 @@ toolForm.addEventListener('submit', async (event) => {
     status.textContent = outputs.length === 1
       ? `Done. Downloaded ${outputs[0].name}.${outputs[0].message ? ` ${outputs[0].message}` : ''}`
       : `Done. Prepared ${outputs.length} files.`;
-    submit.disabled = false; submit.textContent = activeTool.name === 'Reduce Photo File Size' && outputs.length === 1 ? `Download ${formatBytes(outputs[0].blob.size)}` : 'Run again';
+    submit.disabled = false; submit.textContent = activeTool.name === 'Reduce Photo File Size' && outputs.length === 1 ? 'Download' : 'Run again';
   } catch (error) {
     status.textContent = error instanceof Error ? error.message : 'Processing failed. Please check the file and try again.';
     submit.disabled = false; submit.textContent = 'Try again';
