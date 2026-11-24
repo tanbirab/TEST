@@ -56,6 +56,7 @@ let activeFilter: Category | 'All' = 'All';
 let activeTool: Tool | undefined;
 let cropper: Cropper | undefined;
 let previewUrl: string | undefined;
+let outputPreviewUrl: string | undefined;
 let estimateTimer = 0;
 let estimateVersion = 0;
 let estimateCache: { key: string; outputs: EngineOutput[] } | undefined;
@@ -97,10 +98,10 @@ function numericField(id: string, label: string, value: number, min = 1): string
 
 function workflowMarkup(tool: Tool): string {
   const name = tool.name;
-  if (name === 'Reduce Photo File Size') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>Lower quality usually produces a smaller file.</small></div><div class="engine-field"><label for="targetKb">Optional target size (KB)</label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="Leave blank to use quality"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to estimate the output size.</output><div id="filePreview" class="file-preview"></div>`;
-  if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<p class="engine-hint">PNG stays transparent and is optimized losslessly. Other formats are saved as JPEG with a white background.</p><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Reduce Photo File Size') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>Lower quality usually produces a smaller file.</small></div><div class="engine-field"><label for="targetKb">Optional target size (KB)</label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="Leave blank to use quality"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>PNG files retain transparency and use lossless optimization.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a signature image to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Change Photo Width & Height' || name === 'Change Signature Width & Height') return `${fileInput(name.includes('Signature') ? 'Choose a signature image' : 'Choose a photo', 'image/*')}${numericField('width', 'Width (pixels)', 800)}${numericField('height', 'Height (pixels)', 600)}<div id="filePreview" class="file-preview"></div>`;
-  if (name === 'Convert Photo to JPG') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality</label><input id="quality" name="quality" type="range" min="20" max="100" value="90"></div><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Convert Photo to JPG') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">90%</output></label><input id="quality" name="quality" type="range" min="20" max="100" value="90"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to preview the conversion.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Crop Photo') return `${fileInput('Choose a photo', 'image/*')}<p class="engine-hint">Drag the crop handles in the preview, then choose Crop photo.</p><div id="filePreview" class="file-preview crop-preview"></div>`;
   if (name === 'Make Passport Size Photo') return `${fileInput('Choose a photo', 'image/*')}${numericField('widthMm', 'Print width (mm)', 35)}${numericField('heightMm', 'Print height (mm)', 45)}<p class="engine-hint">Exports one photo at 300 DPI using the dimensions above.</p><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Add Name & Date on Photo') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="photoName">Name (optional)</label><input id="photoName" name="photoName" maxlength="120"></div><div class="engine-field"><label for="photoDate">Date (optional)</label><input id="photoDate" name="photoDate" type="date"></div><div id="filePreview" class="file-preview"></div>`;
@@ -175,6 +176,12 @@ async function showSelectedFiles(files: File[]): Promise<void> {
   preview.replaceChildren(summary);
   const image = files[0];
   if (!image.type.startsWith('image/') || image.type === 'application/pdf') return;
+  const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
+  if (quality) {
+    quality.disabled = image.type === 'image/png' && activeTool?.name === 'Reduce Signature File Size';
+    const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
+    if (qualityValue) qualityValue.value = quality.disabled ? 'PNG · lossless' : `${quality.value}%`;
+  }
   previewUrl = URL.createObjectURL(image);
   const imageView = document.createElement('img'); imageView.alt = 'Selected image preview'; imageView.src = previewUrl;
   preview.append(imageView);
@@ -198,7 +205,7 @@ function estimateKey(file: File, tool: string): string {
 }
 
 function requestEstimate(): void {
-  if (!activeTool || !['Reduce Photo File Size', 'Reduce PDF File Size'].includes(activeTool.name)) return;
+  if (!activeTool || !['Reduce Photo File Size', 'Reduce Signature File Size', 'Convert Photo to JPG', 'Reduce PDF File Size'].includes(activeTool.name)) return;
   const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
   const estimate = fields.querySelector<HTMLOutputElement>('#sizeEstimate');
   if (!file || !estimate) return;
@@ -215,6 +222,7 @@ function requestEstimate(): void {
       const outputs = await runEngine({ tool: tool.name, files: [file], extraFiles: outputFiles ? [...outputFiles] : [], form: toolForm, report: (message) => { if (version === estimateVersion) estimate.value = message; } });
       if (version !== estimateVersion) return;
       estimateCache = { key, outputs }; showEstimate(estimate, file, outputs);
+      if (tool.name !== 'Reduce PDF File Size') renderComparison(file, outputs[0]);
     } catch (error) {
       if (version !== estimateVersion) return;
       estimateCache = undefined;
@@ -232,10 +240,41 @@ function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOu
     : `Estimated output: ${formatBytes(bytes)} · this may be larger than the original`;
 }
 
+function renderComparison(file: File, output: EngineOutput): void {
+  const preview = fields.querySelector<HTMLDivElement>('#filePreview');
+  if (!preview || !previewUrl) return;
+  if (outputPreviewUrl) URL.revokeObjectURL(outputPreviewUrl);
+  outputPreviewUrl = URL.createObjectURL(output.blob);
+  const comparison = document.createElement('div'); comparison.className = 'image-comparison';
+  const original = document.createElement('img'); original.src = previewUrl; original.alt = 'Original image';
+  const sourceImage = preview.querySelector<HTMLImageElement>('img');
+  if (sourceImage?.naturalWidth && sourceImage.naturalHeight) comparison.style.aspectRatio = `${sourceImage.naturalWidth} / ${sourceImage.naturalHeight}`;
+  const afterClip = document.createElement('div'); afterClip.className = 'comparison-after';
+  const compressed = document.createElement('img'); compressed.src = outputPreviewUrl; compressed.alt = 'Image after applying the current compression settings';
+  afterClip.append(compressed);
+  const divider = document.createElement('div'); divider.className = 'comparison-divider'; divider.setAttribute('aria-hidden', 'true');
+  const rangeLabel = document.createElement('label'); rangeLabel.className = 'comparison-control';
+  const rangeText = document.createElement('span'); rangeText.textContent = 'Drag to compare original and compressed image';
+  const range = document.createElement('input'); range.type = 'range'; range.min = '0'; range.max = '100'; range.value = '50'; range.setAttribute('aria-label', rangeText.textContent);
+  rangeLabel.append(rangeText);
+  rangeLabel.append(range);
+  const update = () => { const right = 100 - Number(range.value); afterClip.style.clipPath = `inset(0 ${right}% 0 0)`; divider.style.left = `${range.value}%`; };
+  range.addEventListener('input', update);
+  const labels = document.createElement('div'); labels.className = 'comparison-labels';
+  const beforeLabel = document.createElement('span'); beforeLabel.textContent = `Original · ${formatBytes(file.size)}`;
+  const afterLabel = document.createElement('span'); afterLabel.textContent = `Compressed · ${formatBytes(output.blob.size)}`;
+  labels.append(beforeLabel, afterLabel);
+  comparison.append(original, afterClip, divider);
+  preview.replaceChildren(rangeLabel, comparison, labels);
+  update();
+}
+
 function releasePreview(): void {
   cropper?.destroy(); cropper = undefined;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
+  if (outputPreviewUrl) URL.revokeObjectURL(outputPreviewUrl);
   previewUrl = undefined;
+  outputPreviewUrl = undefined;
 }
 
 toolForm.addEventListener('submit', async (event) => {
