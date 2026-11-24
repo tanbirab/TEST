@@ -108,6 +108,7 @@ function workflowMarkup(tool: Tool): string {
     <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to start.</output>
     <div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a photo to see the original and compressed versions.</small></div></div>
     <div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
+    <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section>
     <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller, more posterized image.</small></div></div></details>
   </div>`;
   if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>PNG files retain transparency and use lossless optimization.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a signature image to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
@@ -151,11 +152,20 @@ function openTool(tool: Tool, navigate = true): void {
       const out = fields.querySelector<HTMLOutputElement>('#qualityValue');
       const paletteOut = fields.querySelector<HTMLOutputElement>('#paletteValue');
       if (input.name === 'quality' && out) { out.value = `${input.value}%`; input.setAttribute('aria-valuetext', `${input.value} percent quality`); }
+      if (input.name === 'quality') fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.quality === input.value)));
       if (input.name === 'paletteColors' && paletteOut) { paletteOut.value = input.value === '256' ? 'Full color' : `${input.value} colors`; input.setAttribute('aria-valuetext', paletteOut.value); }
       if (input.name === 'targetKb') updateTargetReduction();
     });
     input.addEventListener('change', requestEstimate);
   });
+  fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => button.addEventListener('click', () => {
+    const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
+    if (!quality) return;
+    quality.value = button.dataset.quality ?? '72';
+    fields.querySelector<HTMLOutputElement>('#qualityValue')!.value = `${quality.value}%`;
+    fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((preset) => preset.setAttribute('aria-pressed', String(preset === button)));
+    requestEstimate();
+  }));
   fields.querySelector<HTMLButtonElement>('#photoRemove')?.addEventListener('click', clearPhotoSelection);
   fields.querySelectorAll<HTMLLabelElement>('.upload-zone, .photo-dropzone').forEach((zone) => {
     zone.addEventListener('dragover', (event) => { event.preventDefault(); zone.classList.add('dragover'); });

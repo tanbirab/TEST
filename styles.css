@@ -280,9 +280,9 @@ body{
 .tool-page[data-tool="reduce-photo-file-size"]{max-width:1120px;padding:34px clamp(20px,4vw,48px) 44px}
 .tool-page[data-tool="reduce-photo-file-size"] .tool-page-heading{display:none}
 .tool-page[data-tool="reduce-photo-file-size"] .tool-back{margin:0 0 16px}
-.tool-page[data-tool="reduce-photo-file-size"] .photo-compression-form{display:grid;grid-template-columns:minmax(300px,.92fr) minmax(0,1.48fr);grid-template-areas:"upload preview" "file preview" "fine stats" "submit submit";align-items:start;gap:18px 30px}
+.tool-page[data-tool="reduce-photo-file-size"] .photo-compression-form{display:grid;grid-template-columns:minmax(300px,.92fr) minmax(0,1.48fr);grid-template-areas:"upload preview" "file preview" "fine stats" "fine levels" "submit submit";align-items:start;gap:18px 30px}
 .tool-page[data-tool="reduce-photo-file-size"]:not(.has-photo) .photo-compression-form{grid-template-areas:"upload preview" "fine preview" "submit submit";grid-template-rows:minmax(260px,auto) minmax(260px,auto) auto}
-.tool-page[data-tool="reduce-photo-file-size"]:not(.has-photo) .compression-stats{display:none}
+.tool-page[data-tool="reduce-photo-file-size"]:not(.has-photo) .compression-stats,.tool-page[data-tool="reduce-photo-file-size"]:not(.has-photo) .compression-levels{display:none}
 .tool-page[data-tool="reduce-photo-file-size"] .photo-workflow-fields,.photo-compressor{display:contents}
 .tool-page[data-tool="reduce-photo-file-size"] .tool-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 .photo-dropzone{grid-area:upload}.photo-file-row{grid-area:file}.photo-compressor .file-preview{grid-area:preview;grid-row:1 / span 2}.compression-stats{grid-area:stats}.compression-levels{grid-area:levels}.photo-fine-tune{grid-area:fine}.tool-page[data-tool="reduce-photo-file-size"] .dialog-submit{grid-area:submit;align-self:end}
@@ -318,6 +318,12 @@ body{
 .compression-presets button:hover{border-color:#99948a}
 .compression-presets button[aria-pressed="true"]{border:2px solid #242320;background:#f5f3ef}
 .compression-presets strong{font-size:15px}.compression-presets span{color:#706d67;font-size:13px}.compression-presets button[aria-pressed="true"] span{padding:4px 8px;border-radius:99px;background:#1d1d1b;color:#fff;font-weight:700}
+.tool-page[data-tool="reduce-photo-file-size"] .compression-levels{padding:19px;border:1px solid #e5e0d6;border-radius:17px;background:#faf9f6}
+.tool-page[data-tool="reduce-photo-file-size"] .compression-presets{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tool-page[data-tool="reduce-photo-file-size"] .compression-presets button{min-height:78px;padding:10px;border-radius:12px;display:grid;justify-items:center;align-content:center;text-align:center;gap:5px}
+.tool-page[data-tool="reduce-photo-file-size"] .compression-presets button::before{display:none}
+.tool-page[data-tool="reduce-photo-file-size"] .compression-presets strong{font-size:13px}
+.tool-page[data-tool="reduce-photo-file-size"] .compression-presets span{font-size:10px}
 .photo-fine-tune{padding:17px 20px;border:1px solid #e5e0d6;border-radius:17px;background:#faf9f6}
 .photo-fine-tune summary{font-size:17px;font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
 .photo-fine-tune summary::-webkit-details-marker{display:none}.photo-fine-tune summary::after{content:'⌄';color:#77736c;font-size:20px}.photo-fine-tune[open] summary::after{content:'⌃'}
