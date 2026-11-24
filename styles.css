@@ -347,6 +347,7 @@ body{
 .dialog-submit:disabled{opacity:.72}
 @media(max-width:650px){.tool-page{padding:24px 18px 42px;border-radius:14px}.tool-page-heading{align-items:flex-start;gap:13px}.tool-page-heading .dialog-icon{width:52px;height:52px;border-radius:14px}.tool-page-heading p{font-size:13px}.upload-zone{min-height:150px}.engine-field input:not([type="range"]){font-size:max(1rem,1em)}}
 .license-table-wrap{max-width:100%;overflow:auto;margin-top:22px}
+@media(max-width:650px){.tool-page[data-tool="reduce-photo-file-size"] .tool-page-heading{gap:10px}.tool-page[data-tool="reduce-photo-file-size"] .tool-page-heading>div:last-child{flex:1;min-width:0}.tool-page[data-tool="reduce-photo-file-size"] .tool-page-heading h1{margin:0 0 4px;font-size:clamp(14px,5vw,21px);line-height:1.1;letter-spacing:-.6px;white-space:nowrap}}
 .license-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
 .license-table-wrap th,.license-table-wrap td{padding:10px;border-bottom:1px solid #dce5f1;vertical-align:top}
 .license-table-wrap a,.policy-links a{color:#b8392a;text-decoration:underline;text-underline-offset:2px}
