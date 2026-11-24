@@ -85,6 +85,9 @@ body{background:#f2f6fc}
 .topbar{background:rgba(242,246,252,.96);backdrop-filter:blur(20px) saturate(145%);border-color:#dce6f4}
 .tool-section{background:linear-gradient(180deg,#edf4ff 0%,#f5f8fd 62%,#f2f6fc 100%)!important}
 
+/* Let the header scroll with the page so it never covers the catalog controls. */
+.topbar{position:relative;top:auto;z-index:auto}
+
 /* The catalog must reveal the shared page backdrop, not paint a local blue slab. */
 .tool-section{background:transparent!important;background-image:none!important}
 .tool-section::before{content:none!important;display:none!important}
