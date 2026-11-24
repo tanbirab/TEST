@@ -135,7 +135,8 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
 
     // One size-based guess and one bracket refinement keep target adjustment
     // responsive while exposing the actual selected quality to the slider.
-    for (let attempt = 0; attempt < 2; attempt++) {
+    const alreadyClose = Boolean(fit && best.byteLength >= targetBytes * 0.9);
+    for (let attempt = 0; !alreadyClose && attempt < 2; attempt++) {
       if (Math.abs(candidate - previousQuality) < 0.005) candidate = (lower + upper) / 2;
       if (Math.abs(candidate - previousQuality) < 0.005) break;
       const bytes = await mozJpegFile(file, candidate, whiteBackground, paletteColors, dithering);
@@ -144,6 +145,7 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
         if (!fit || candidate > fit.quality) fit = { bytes, quality: candidate };
         lower = Math.max(lower, candidate);
       } else upper = Math.min(upper, candidate);
+      if (fit && fit.bytes.byteLength >= targetBytes * 0.9) break;
       previousQuality = candidate;
       previousBytes = bytes.byteLength;
       candidate = attempt === 0

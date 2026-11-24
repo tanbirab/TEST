@@ -65,6 +65,7 @@ let estimateCache: { key: string; outputs: EngineOutput[] } | undefined;
 let estimateInFlight = false;
 let estimateQueued = false;
 let targetQualityBaseline: { file: File; quality: number; bytes: number } | undefined;
+let pendingPhotoDownload = false;
 
 function renderTools(): void {
   const visibleTools = activeFilter === 'All' ? tools : tools.filter((tool) => tool.category === activeFilter);
@@ -132,7 +133,7 @@ function workflowMarkup(tool: Tool): string {
 
 function openTool(tool: Tool, navigate = true): void {
   if (submit.parentElement !== toolForm) toolForm.append(submit);
-  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; targetQualityBaseline = undefined; window.clearTimeout(estimateTimer); estimateVersion += 1;
+  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; targetQualityBaseline = undefined; pendingPhotoDownload = false; window.clearTimeout(estimateTimer); estimateVersion += 1;
   dialogTitle.textContent = tool.name;
   dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
   dialogDescription.textContent = tool.description;
@@ -333,6 +334,14 @@ function adjustQualityForTarget(): void {
   const adjusted = Math.max(Number(quality.min), Math.min(Number(quality.max), guess));
   quality.value = String(adjusted);
   quality.dispatchEvent(new Event('input', { bubbles: true }));
+  const approximateBytes = Math.min(targetBytes, file.size);
+  const compressedSize = fields.querySelector<HTMLElement>('#compressedSize');
+  const savedPercent = fields.querySelector<HTMLElement>('#savedPercent');
+  const estimate = fields.querySelector<HTMLOutputElement>('#sizeEstimate');
+  if (compressedSize) compressedSize.textContent = `~${formatBytes(approximateBytes)}`;
+  if (savedPercent) savedPercent.textContent = `${Math.max(0, Math.round((1 - approximateBytes / file.size) * 100))}%`;
+  if (estimate) estimate.value = `Updating estimate for your ${formatBytes(targetBytes)} target…`;
+  submit.textContent = `Download ~${formatBytes(approximateBytes)}`;
 }
 
 function requestEstimate(): void {
@@ -346,6 +355,7 @@ function requestEstimate(): void {
   const version = ++estimateVersion;
   estimate.value = 'Estimating output size…';
   estimateTimer = window.setTimeout(async () => {
+    estimateTimer = 0;
     const tool = activeTool;
     if (!tool) return;
     if (estimateInFlight) { estimateQueued = true; return; }
@@ -363,9 +373,21 @@ function requestEstimate(): void {
       estimate.value = error instanceof Error ? `Estimate unavailable: ${error.message}` : 'Estimate unavailable. The selected file will be checked when processed.';
     } finally {
       estimateInFlight = false;
-      if (estimateQueued) { estimateQueued = false; requestEstimate(); }
+      if (estimateQueued) { estimateQueued = false; requestEstimate(); return; }
+      if (pendingPhotoDownload) {
+        pendingPhotoDownload = false;
+        const latestFile = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
+        if (latestFile && activeTool?.name === 'Reduce Photo File Size' && estimateCache?.key === estimateKey(latestFile, activeTool.name)) {
+          submit.disabled = false;
+          toolForm.requestSubmit(submit);
+        } else {
+          submit.disabled = false;
+          submit.textContent = 'Try again';
+          status.textContent = 'The size estimate could not finish. Click Download to try again.';
+        }
+      }
     }
-  }, 250);
+  }, activeTool.name === 'Reduce Photo File Size' ? 500 : 250);
 }
 
 function formatBytes(bytes: number): string { return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(2)} MB` : `${(bytes / 1024).toFixed(0)} KB`; }
@@ -439,6 +461,16 @@ toolForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (event.submitter !== submit) return;
   if (!activeTool) return;
+  if (activeTool.name === 'Reduce Photo File Size' && estimateInFlight) {
+    if (estimateTimer) { window.clearTimeout(estimateTimer); estimateTimer = 0; estimateQueued = true; }
+    pendingPhotoDownload = true;
+    submit.disabled = true; submit.textContent = 'Preparing download…';
+    status.textContent = 'Finishing the current compression before download…';
+    return;
+  }
+  if (activeTool.name === 'Reduce Photo File Size' && estimateTimer) {
+    window.clearTimeout(estimateTimer); estimateTimer = 0; estimateVersion += 1;
+  }
   const files = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement).files;
   const signature = (toolForm.elements.namedItem('signatureFile') as HTMLInputElement | null)?.files;
   const roots = (toolForm.elements.namedItem('trustRoots') as HTMLInputElement | null)?.files;
