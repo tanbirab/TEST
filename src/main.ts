@@ -18,26 +18,26 @@ import icon16 from './assets/icons/16-put-many-pages-on-one-page.svg?raw';
 import icon17 from './assets/icons/17-verify-pdf-signature.svg?raw';
 
 type Category = 'Images' | 'PDFs' | 'Signatures';
-type Tool = { name: string; category: Category; icon: string; tone: string; tag: string };
+type Tool = { name: string; description: string; category: Category; icon: string; tone: string; tag: string };
 
 const tools: Tool[] = [
-  { name: 'Reduce Photo File Size', category: 'Images', icon: icon01, tone: 'green', tag: 'Popular' },
-  { name: 'Reduce PDF File Size', category: 'PDFs', icon: icon02, tone: 'peach', tag: 'Popular' },
-  { name: 'Reduce Signature File Size', category: 'Signatures', icon: icon03, tone: 'lilac', tag: '' },
-  { name: 'Change Signature Width & Height', category: 'Signatures', icon: icon04, tone: 'blue', tag: '' },
-  { name: 'Change Photo Width & Height', category: 'Images', icon: icon05, tone: 'green', tag: '' },
-  { name: 'Make PDF from Photos', category: 'Images', icon: icon06, tone: 'yellow', tag: 'Popular' },
-  { name: 'Convert Photo to JPG', category: 'Images', icon: icon07, tone: 'peach', tag: '' },
-  { name: 'Merge PDF Files', category: 'PDFs', icon: icon08, tone: 'lilac', tag: 'Popular' },
-  { name: 'Crop Photo', category: 'Images', icon: icon09, tone: 'blue', tag: '' },
-  { name: 'Make Passport Size Photo', category: 'Images', icon: icon10, tone: 'rose', tag: '' },
-  { name: 'Add Name & Date on Photo', category: 'Images', icon: icon11, tone: 'yellow', tag: '' },
-  { name: 'Split PDF', category: 'PDFs', icon: icon12, tone: 'green', tag: '' },
-  { name: 'Convert PDF to JPG', category: 'PDFs', icon: icon13, tone: 'peach', tag: '' },
-  { name: 'Delete PDF Pages', category: 'PDFs', icon: icon14, tone: 'rose', tag: '' },
-  { name: 'Sign PDF', category: 'Signatures', icon: icon15, tone: 'lilac', tag: '' },
-  { name: 'Put Many Pages on One Page', category: 'PDFs', icon: icon16, tone: 'blue', tag: '' },
-  { name: 'Verify PDF Signature', category: 'Signatures', icon: icon17, tone: 'green', tag: '' },
+  { name: 'Reduce Photo File Size', description: 'Compress photos for easier storage and sharing.', category: 'Images', icon: icon01, tone: 'green', tag: 'Popular' },
+  { name: 'Reduce PDF File Size', description: 'Make PDFs smaller and easier to share.', category: 'PDFs', icon: icon02, tone: 'peach', tag: 'Popular' },
+  { name: 'Reduce Signature File Size', description: 'Make a signature image smaller for uploading or sharing.', category: 'Signatures', icon: icon03, tone: 'lilac', tag: '' },
+  { name: 'Change Signature Width & Height', description: 'Resize a signature image to the dimensions you need.', category: 'Signatures', icon: icon04, tone: 'blue', tag: '' },
+  { name: 'Change Photo Width & Height', description: 'Set a photo to a specific width and height.', category: 'Images', icon: icon05, tone: 'green', tag: '' },
+  { name: 'Make PDF from Photos', description: 'Combine photos into a single PDF file.', category: 'Images', icon: icon06, tone: 'yellow', tag: 'Popular' },
+  { name: 'Convert Photo to JPG', description: 'Convert a photo to the widely supported JPG format.', category: 'Images', icon: icon07, tone: 'peach', tag: '' },
+  { name: 'Merge PDF Files', description: 'Combine multiple PDFs into one document.', category: 'PDFs', icon: icon08, tone: 'lilac', tag: 'Popular' },
+  { name: 'Crop Photo', description: 'Trim a photo to keep the area you want.', category: 'Images', icon: icon09, tone: 'blue', tag: '' },
+  { name: 'Make Passport Size Photo', description: 'Prepare a photo in passport size.', category: 'Images', icon: icon10, tone: 'rose', tag: '' },
+  { name: 'Add Name & Date on Photo', description: 'Place a name and date on a photo.', category: 'Images', icon: icon11, tone: 'yellow', tag: '' },
+  { name: 'Split PDF', description: 'Separate a PDF into pages or page ranges.', category: 'PDFs', icon: icon12, tone: 'green', tag: '' },
+  { name: 'Convert PDF to JPG', description: 'Convert PDF pages into JPG images.', category: 'PDFs', icon: icon13, tone: 'peach', tag: '' },
+  { name: 'Delete PDF Pages', description: 'Remove the pages you select from a PDF.', category: 'PDFs', icon: icon14, tone: 'rose', tag: '' },
+  { name: 'Sign PDF', description: 'Add your signature to a PDF document.', category: 'Signatures', icon: icon15, tone: 'lilac', tag: '' },
+  { name: 'Put Many Pages on One Page', description: 'Arrange several PDF pages on one sheet.', category: 'PDFs', icon: icon16, tone: 'blue', tag: '' },
+  { name: 'Verify PDF Signature', description: 'Check the validity of a PDF signature.', category: 'Signatures', icon: icon17, tone: 'green', tag: '' },
 ];
 
 const grid = document.querySelector<HTMLDivElement>('#toolGrid')!;
@@ -53,7 +53,7 @@ function renderTools(): void {
     const index = tools.indexOf(tool);
     return `<button class="tool-card" type="button" aria-label="View status for ${tool.name}" data-index="${index}">
       <span class="card-top"><span class="tool-illustration" aria-hidden="true">${inlineIcon(tool.icon, `card-${index}`)}</span></span>
-      <span class="tool-name">${tool.name}</span><span class="card-arrow" aria-hidden="true">↗</span>
+      <span class="tool-name">${tool.name}</span><span class="tool-description">${tool.description}</span><span class="card-arrow" aria-hidden="true">↗</span>
     </button>`;
   }).join('');
   grid.querySelectorAll<HTMLButtonElement>('.tool-card').forEach((card) => {
