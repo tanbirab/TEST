@@ -322,7 +322,8 @@ function requestEstimate(): void {
     try {
       const outputs = await runEngine({ tool: tool.name, files: [file], extraFiles: outputFiles ? [...outputFiles] : [], form: toolForm, report: (message) => { if (version === estimateVersion) estimate.value = message; } });
       if (version !== estimateVersion) return;
-      estimateCache = { key, outputs }; showEstimate(estimate, file, outputs);
+      showEstimate(estimate, file, outputs);
+      estimateCache = { key: estimateKey(file, tool.name), outputs };
       if (tool.name !== 'Reduce PDF File Size') renderComparison(file, outputs[0]);
     } catch (error) {
       if (version !== estimateVersion) return;
@@ -346,6 +347,18 @@ function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOu
   const savedPercent = fields.querySelector<HTMLElement>('#savedPercent');
   if (compressedSize) compressedSize.textContent = formatBytes(bytes);
   if (savedPercent) savedPercent.textContent = bytes < file.size ? `${ratio}%` : '0%';
+  const target = fields.querySelector<HTMLInputElement>('#targetKb');
+  const quality = fields.querySelector<HTMLInputElement>('#quality');
+  const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
+  const selectedQuality = outputs[0]?.quality;
+  if (target?.value && selectedQuality !== undefined && quality) {
+    quality.value = String(selectedQuality);
+    quality.setAttribute('aria-valuetext', `${selectedQuality} percent quality`);
+    if (qualityValue) qualityValue.value = `${selectedQuality}%`;
+    fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.quality === String(selectedQuality)));
+    });
+  }
 }
 
 function renderComparison(file: File, output?: EngineOutput): void {

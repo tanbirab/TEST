@@ -1,7 +1,7 @@
 import { zipSync } from 'fflate';
 import { encodeMozJpeg, encodeMozJpegFile, optimizePng } from './image-codec';
 
-export type EngineOutput = { name: string; blob: Blob; message?: string };
+export type EngineOutput = { name: string; blob: Blob; message?: string; quality?: number };
 
 const MAX_FILE_BYTES = 100 * 1024 * 1024;
 const MAX_IMAGE_PIXELS = 40_000_000;
@@ -121,32 +121,45 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
   const startQuality = Number(value(form, 'quality', '82')) / 100;
   report(targetKb > 0 ? 'Finding a quality close to your target…' : 'Encoding a compact JPEG in your browser…');
   let best = await mozJpegFile(file, startQuality, whiteBackground, paletteColors, dithering);
-  if (targetKb > 0 && best.byteLength > targetKb * 1024) {
+  let selectedQuality = startQuality;
+  if (targetKb > 0) {
     const targetBytes = targetKb * 1024;
     const floor = 0.12;
-    const firstQuality = Math.max(floor, startQuality * Math.sqrt(targetBytes / best.byteLength));
-    let first = await mozJpegFile(file, firstQuality, whiteBackground, paletteColors, dithering);
-    let smallest = first.byteLength < best.byteLength ? first : best;
-    let fit: { bytes: ArrayBuffer; quality: number } | undefined = first.byteLength <= targetBytes ? { bytes: first, quality: firstQuality } : undefined;
+    let smallest = { bytes: best, quality: startQuality };
+    let fit: { bytes: ArrayBuffer; quality: number } | undefined = best.byteLength <= targetBytes ? smallest : undefined;
+    let lower = fit ? startQuality : floor;
+    let upper = fit ? 0.95 : startQuality;
+    let previousQuality = startQuality;
+    let previousBytes = best.byteLength;
+    let candidate = Math.max(lower, Math.min(upper, startQuality * Math.sqrt(targetBytes / previousBytes)));
 
-    // Use one quick refinement instead of a long binary search. File size is
-    // not perfectly linear with JPEG quality, so keep the closest valid result.
-    const refineQuality = first.byteLength <= targetBytes
-      ? (firstQuality + startQuality) / 2
-      : Math.max(floor, firstQuality * Math.sqrt(targetBytes / first.byteLength));
-    if (refineQuality !== firstQuality) {
-      const refined = await mozJpegFile(file, refineQuality, whiteBackground, paletteColors, dithering);
-      if (refined.byteLength < smallest.byteLength) smallest = refined;
-      if (refined.byteLength <= targetBytes && (!fit || refineQuality > fit.quality)) fit = { bytes: refined, quality: refineQuality };
+    // One size-based guess and one bracket refinement keep target adjustment
+    // responsive while exposing the actual selected quality to the slider.
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (Math.abs(candidate - previousQuality) < 0.005) candidate = (lower + upper) / 2;
+      if (Math.abs(candidate - previousQuality) < 0.005) break;
+      const bytes = await mozJpegFile(file, candidate, whiteBackground, paletteColors, dithering);
+      if (bytes.byteLength < smallest.bytes.byteLength) smallest = { bytes, quality: candidate };
+      if (bytes.byteLength <= targetBytes) {
+        if (!fit || candidate > fit.quality) fit = { bytes, quality: candidate };
+        lower = Math.max(lower, candidate);
+      } else upper = Math.min(upper, candidate);
+      previousQuality = candidate;
+      previousBytes = bytes.byteLength;
+      candidate = attempt === 0
+        ? Math.max(lower, Math.min(upper, previousQuality * Math.sqrt(targetBytes / previousBytes)))
+        : (lower + upper) / 2;
     }
-    best = fit?.bytes ?? smallest;
+    const chosen = fit ?? smallest;
+    best = chosen.bytes;
+    selectedQuality = chosen.quality;
   }
   if (best.byteLength > file.size && !signature) throw new Error('This image is already smaller than the encoded result. Try a lower quality or a different output format.');
   const message = targetKb > 0 && best.byteLength > targetKb * 1024
     ? `Target was too small; best result is ${(best.byteLength / 1024).toFixed(0)} KB.`
     : undefined;
   if (message) report(message);
-  return { ...output(`${stem}-compressed.jpg`, best, 'image/jpeg'), message };
+  return { ...output(`${stem}-compressed.jpg`, best, 'image/jpeg'), message, quality: Math.round(selectedQuality * 100) };
 }
 
 async function resizedCanvas(file: File, width: number, height: number): Promise<HTMLCanvasElement> {
