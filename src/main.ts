@@ -1,26 +1,43 @@
 import { getToolAvailability, initializeCore } from './wasm-adapter';
+import icon01 from './assets/icons/01-reduce-photo-file-size.svg?raw';
+import icon02 from './assets/icons/02-reduce-pdf-file-size.svg?raw';
+import icon03 from './assets/icons/03-reduce-signature-file-size.svg?raw';
+import icon04 from './assets/icons/04-change-signature-width-height.svg?raw';
+import icon05 from './assets/icons/05-change-photo-width-height.svg?raw';
+import icon06 from './assets/icons/06-make-pdf-from-photos.svg?raw';
+import icon07 from './assets/icons/07-convert-photo-to-jpg.svg?raw';
+import icon08 from './assets/icons/08-merge-pdf-files.svg?raw';
+import icon09 from './assets/icons/09-crop-photo.svg?raw';
+import icon10 from './assets/icons/10-make-passport-size-photo.svg?raw';
+import icon11 from './assets/icons/11-add-name-and-date-on-photo.svg?raw';
+import icon12 from './assets/icons/12-split-pdf.svg?raw';
+import icon13 from './assets/icons/13-convert-pdf-to-jpg.svg?raw';
+import icon14 from './assets/icons/14-delete-pdf-pages.svg?raw';
+import icon15 from './assets/icons/15-sign-pdf.svg?raw';
+import icon16 from './assets/icons/16-put-many-pages-on-one-page.svg?raw';
+import icon17 from './assets/icons/17-verify-pdf-signature.svg?raw';
 
 type Category = 'Images' | 'PDFs' | 'Signatures';
 type Tool = { name: string; category: Category; icon: string; tone: string; tag: string };
 
 const tools: Tool[] = [
-  { name: 'Reduce Photo File Size', category: 'Images', icon: '/icons/01-reduce-photo-file-size.svg', tone: 'green', tag: 'Popular' },
-  { name: 'Reduce PDF File Size', category: 'PDFs', icon: '/icons/02-reduce-pdf-file-size.svg', tone: 'peach', tag: 'Popular' },
-  { name: 'Reduce Signature File Size', category: 'Signatures', icon: '/icons/03-reduce-signature-file-size.svg', tone: 'lilac', tag: '' },
-  { name: 'Change Signature Width & Height', category: 'Signatures', icon: '/icons/04-change-signature-width-height.svg', tone: 'blue', tag: '' },
-  { name: 'Change Photo Width & Height', category: 'Images', icon: '/icons/05-change-photo-width-height.svg', tone: 'green', tag: '' },
-  { name: 'Make PDF from Photos', category: 'Images', icon: '/icons/06-make-pdf-from-photos.svg', tone: 'yellow', tag: 'Popular' },
-  { name: 'Convert Photo to JPG', category: 'Images', icon: '/icons/07-convert-photo-to-jpg.svg', tone: 'peach', tag: '' },
-  { name: 'Merge PDF Files', category: 'PDFs', icon: '/icons/08-merge-pdf-files.svg', tone: 'lilac', tag: 'Popular' },
-  { name: 'Crop Photo', category: 'Images', icon: '/icons/09-crop-photo.svg', tone: 'blue', tag: '' },
-  { name: 'Make Passport Size Photo', category: 'Images', icon: '/icons/10-make-passport-size-photo.svg', tone: 'rose', tag: '' },
-  { name: 'Add Name & Date on Photo', category: 'Images', icon: '/icons/11-add-name-and-date-on-photo.svg', tone: 'yellow', tag: '' },
-  { name: 'Split PDF', category: 'PDFs', icon: '/icons/12-split-pdf.svg', tone: 'green', tag: '' },
-  { name: 'Convert PDF to JPG', category: 'PDFs', icon: '/icons/13-convert-pdf-to-jpg.svg', tone: 'peach', tag: '' },
-  { name: 'Delete PDF Pages', category: 'PDFs', icon: '/icons/14-delete-pdf-pages.svg', tone: 'rose', tag: '' },
-  { name: 'Sign PDF', category: 'Signatures', icon: '/icons/15-sign-pdf.svg', tone: 'lilac', tag: '' },
-  { name: 'Put Many Pages on One Page', category: 'PDFs', icon: '/icons/16-put-many-pages-on-one-page.svg', tone: 'blue', tag: '' },
-  { name: 'Verify PDF Signature', category: 'Signatures', icon: '/icons/17-verify-pdf-signature.svg', tone: 'green', tag: '' },
+  { name: 'Reduce Photo File Size', category: 'Images', icon: icon01, tone: 'green', tag: 'Popular' },
+  { name: 'Reduce PDF File Size', category: 'PDFs', icon: icon02, tone: 'peach', tag: 'Popular' },
+  { name: 'Reduce Signature File Size', category: 'Signatures', icon: icon03, tone: 'lilac', tag: '' },
+  { name: 'Change Signature Width & Height', category: 'Signatures', icon: icon04, tone: 'blue', tag: '' },
+  { name: 'Change Photo Width & Height', category: 'Images', icon: icon05, tone: 'green', tag: '' },
+  { name: 'Make PDF from Photos', category: 'Images', icon: icon06, tone: 'yellow', tag: 'Popular' },
+  { name: 'Convert Photo to JPG', category: 'Images', icon: icon07, tone: 'peach', tag: '' },
+  { name: 'Merge PDF Files', category: 'PDFs', icon: icon08, tone: 'lilac', tag: 'Popular' },
+  { name: 'Crop Photo', category: 'Images', icon: icon09, tone: 'blue', tag: '' },
+  { name: 'Make Passport Size Photo', category: 'Images', icon: icon10, tone: 'rose', tag: '' },
+  { name: 'Add Name & Date on Photo', category: 'Images', icon: icon11, tone: 'yellow', tag: '' },
+  { name: 'Split PDF', category: 'PDFs', icon: icon12, tone: 'green', tag: '' },
+  { name: 'Convert PDF to JPG', category: 'PDFs', icon: icon13, tone: 'peach', tag: '' },
+  { name: 'Delete PDF Pages', category: 'PDFs', icon: icon14, tone: 'rose', tag: '' },
+  { name: 'Sign PDF', category: 'Signatures', icon: icon15, tone: 'lilac', tag: '' },
+  { name: 'Put Many Pages on One Page', category: 'PDFs', icon: icon16, tone: 'blue', tag: '' },
+  { name: 'Verify PDF Signature', category: 'Signatures', icon: icon17, tone: 'green', tag: '' },
 ];
 
 const grid = document.querySelector<HTMLDivElement>('#toolGrid')!;
@@ -29,7 +46,7 @@ const search = document.querySelector<HTMLInputElement>('#toolSearch')!;
 const empty = document.querySelector<HTMLDivElement>('#emptyState')!;
 const dialog = document.querySelector<HTMLDialogElement>('#toolDialog')!;
 const dialogTitle = document.querySelector<HTMLElement>('#dialogTitle')!;
-const dialogIcon = document.querySelector<HTMLImageElement>('#dialogIcon')!;
+const dialogIcon = document.querySelector<HTMLElement>('#dialogIcon')!;
 const dialogDescription = document.querySelector<HTMLElement>('#dialogDescription')!;
 let activeFilter = 'All';
 
@@ -42,7 +59,7 @@ function renderTools(): void {
   grid.innerHTML = visible.map((tool) => {
     const index = tools.indexOf(tool);
     return `<button class="tool-card" type="button" aria-label="View status for ${tool.name}" data-index="${index}">
-      <span class="card-top"><img class="tool-illustration" src="${tool.icon}" alt="" width="56" height="56" loading="lazy" /><span class="tool-tag">${tool.tag}</span></span>
+      <span class="card-top"><span class="tool-illustration" aria-hidden="true">${inlineIcon(tool.icon, `card-${index}`)}</span><span class="tool-tag">${tool.tag}</span></span>
       <span class="tool-name">${tool.name}</span><span class="card-arrow" aria-hidden="true">↗</span>
     </button>`;
   }).join('');
@@ -55,7 +72,7 @@ function renderTools(): void {
 
 async function openTool(tool: Tool): Promise<void> {
   dialogTitle.textContent = tool.name;
-  dialogIcon.src = tool.icon;
+  dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
   dialogDescription.textContent = 'Checking whether this tool is available…';
   dialog.showModal();
   try {
@@ -66,6 +83,14 @@ async function openTool(tool: Tool): Promise<void> {
   } catch {
     dialogDescription.textContent = 'The local processing module could not be loaded. No file has been read or uploaded.';
   }
+}
+
+function inlineIcon(markup: string, prefix: string): string {
+  return markup
+    .replace(/\bid="([^"]+)"/g, (_match, id: string) => `id="${prefix}-${id}"`)
+    .replace(/url\(#([^)]+)\)/g, (_match, id: string) => `url(#${prefix}-${id})`)
+    .replace(/aria-labelledby="([^"]+)"/g, (_match, ids: string) =>
+      `aria-labelledby="${ids.split(/\s+/).map((id) => `${prefix}-${id}`).join(' ')}"`);
 }
 
 document.querySelectorAll<HTMLButtonElement>('.filter').forEach((button) => {
