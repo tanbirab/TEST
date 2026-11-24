@@ -178,7 +178,6 @@ body{
   position:static!important;
   isolation:auto!important;
   background-color:#edf4ff!important;
-  background-image:radial-gradient(ellipse at 15% 8%,rgba(255,210,190,.38),transparent 38%),radial-gradient(ellipse at 82% 5%,rgba(149,192,247,.34),transparent 43%),radial-gradient(ellipse at 52% 35%,rgba(255,231,218,.24),transparent 50%),repeating-linear-gradient(90deg,#6689b522 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b51c 0 1px,transparent 1px 88px)!important;
   background-attachment:scroll!important;
 }
 body::before{content:none!important;display:none!important}
@@ -224,9 +223,14 @@ body::before{content:none!important;display:none!important}
   .footer-meta{grid-area:meta;justify-self:end;gap:10px;white-space:nowrap;font-size:9px}
 }
 
-/* Pin both background grid directions to the same explicit tile size. */
+/* Match the background grid to the tool-card columns so its alignment does not drift. */
 body{
-  background-image:radial-gradient(ellipse at 15% 8%,rgba(255,210,190,.38),transparent 38%),radial-gradient(ellipse at 82% 5%,rgba(149,192,247,.34),transparent 43%),radial-gradient(ellipse at 52% 35%,rgba(255,231,218,.24),transparent 50%),repeating-linear-gradient(90deg,#6689b522 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b51c 0 1px,transparent 1px 88px)!important;
-  background-size:100% 100%,100% 100%,100% 100%,88px 88px,88px 88px!important;
+  --page-grid-step:calc((min(1120px, 88vw) + 16px) / 12);
+  --page-grid-x:max(calc((100vw - 1120px) / 2), 6vw);
+  background-image:radial-gradient(ellipse at 15% 8%,rgba(255,210,190,.38),transparent 38%),radial-gradient(ellipse at 82% 5%,rgba(149,192,247,.34),transparent 43%),radial-gradient(ellipse at 52% 35%,rgba(255,231,218,.24),transparent 50%),repeating-linear-gradient(90deg,#6689b522 0 1px,transparent 1px var(--page-grid-step)),repeating-linear-gradient(0deg,#6689b51c 0 1px,transparent 1px var(--page-grid-step))!important;
+  background-size:100% 100%,100% 100%,100% 100%,var(--page-grid-step) var(--page-grid-step),var(--page-grid-step) var(--page-grid-step)!important;
   background-repeat:no-repeat,no-repeat,no-repeat,repeat,repeat!important;
+  background-position:0 0,0 0,0 0,var(--page-grid-x) 0,0 0!important;
 }
+@media(max-width:900px){body{--page-grid-step:calc((90vw + 16px) / 9);--page-grid-x:5vw}}
+@media(max-width:650px){body{--page-grid-step:calc((100vw - 31px) / 6);--page-grid-x:20px}}
