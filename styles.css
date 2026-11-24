@@ -280,7 +280,7 @@ body{
 .image-comparison:has(.comparison-range:focus-visible) .comparison-handle{outline:3px solid #d14836;outline-offset:3px}
 .size-estimate{min-height:0;padding:8px 12px;font-size:12px}
 .tool-page[data-tool="reduce-photo-file-size"]{max-width:980px;min-height:0;padding:20px clamp(18px,3vw,34px) 42px}
-.tool-page[data-tool="reduce-photo-file-size"] .tool-card{padding:20px clamp(16px,2.5vw,28px) 24px}
+.tool-page[data-tool="reduce-photo-file-size"] .tool-card{padding:20px clamp(16px,2.5vw,28px) 24px;overflow:visible}
 .tool-page[data-tool="reduce-photo-file-size"] .tool-page-heading{margin-bottom:16px}
 .tool-page[data-tool="reduce-photo-file-size"] .tool-back{margin:0 0 8px}
 .tool-page[data-tool="reduce-photo-file-size"] .photo-compression-form{display:grid;grid-template-columns:minmax(270px,.92fr) minmax(0,1.48fr);grid-template-areas:"upload preview" "file preview" "fine summary" "submit submit";align-items:start;gap:12px 22px}
