@@ -107,6 +107,14 @@ function mozJpegFile(file: File, quality: number, whiteBackground = false, palet
 
 async function compressImage(file: File, form: HTMLFormElement, report: RunInput['report'], signature: boolean): Promise<EngineOutput> {
   const stem = safeStem(file.name);
+  const outputFormat = value(form, 'outputFormat', 'jpg');
+  if (!signature && outputFormat === 'png') {
+    report('Optimizing a lossless PNG in your browser…');
+    const canvas = await imageCanvas(file);
+    const png = await new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('PNG export failed.')), 'image/png'));
+    const optimized = await optimizePng(await png.arrayBuffer());
+    return output(`${stem}-compressed.png`, optimized, 'image/png');
+  }
   const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
   if (signature && isPng) {
     report('Optimizing the PNG without removing transparency…');
@@ -161,7 +169,8 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
     ? `Target was too small; best result is ${(best.byteLength / 1024).toFixed(0)} KB.`
     : undefined;
   if (message) report(message);
-  return { ...output(`${stem}-compressed.jpg`, best, 'image/jpeg'), message, quality: Math.round(selectedQuality * 100) };
+  const extension = outputFormat === 'jpeg' ? 'jpeg' : 'jpg';
+  return { ...output(`${stem}-compressed.${extension}`, best, 'image/jpeg'), message, quality: Math.round(selectedQuality * 100) };
 }
 
 async function resizedCanvas(file: File, width: number, height: number): Promise<HTMLCanvasElement> {

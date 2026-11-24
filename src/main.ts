@@ -110,7 +110,7 @@ function workflowMarkup(tool: Tool): string {
     <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to start.</output>
     <div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a photo to see the original and compressed versions.</small></div></div>
     <div class="compression-summary"><div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
-    <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section><div class="engine-field output-name-field"><label for="outputName">Download filename</label><div class="output-name-control"><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed-photo"><span>.jpg</span></div></div></div>
+    <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section><div class="engine-field output-name-field"><label for="outputName">Download filename</label><div class="output-name-control"><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed-photo"><select id="outputFormat" name="outputFormat" aria-label="Download format"><option value="jpg" selected>JPG</option><option value="jpeg">JPEG</option><option value="png">PNG</option></select></div></div></div>
     <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
     <div class="photo-download-row"></div>
   </div>`;
@@ -178,6 +178,30 @@ function openTool(tool: Tool, navigate = true): void {
   const initialPalette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
   const initialDithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
   if (initialPalette && initialDithering) initialDithering.disabled = initialPalette.value === '256';
+  const outputFormat = fields.querySelector<HTMLSelectElement>('#outputFormat');
+  const updateOutputFormat = () => {
+    if (!outputFormat) return;
+    const isPng = outputFormat.value === 'png';
+    const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
+    const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
+    const palette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
+    const dithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
+    const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
+    const targetReduction = fields.querySelector<HTMLElement>('#targetReduction');
+    if (quality) quality.disabled = isPng;
+    if (target) target.disabled = isPng;
+    if (palette) palette.disabled = isPng;
+    if (dithering) dithering.disabled = isPng || palette?.value === '256';
+    fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = isPng; });
+    if (qualityValue && isPng) qualityValue.value = 'PNG · lossless';
+    else if (qualityValue && quality) qualityValue.value = `${quality.value}%`;
+    if (targetReduction) targetReduction.textContent = isPng
+      ? 'PNG is lossless; quality and target size apply to JPG/JPEG.'
+      : 'Enter a target size to see the required reduction.';
+    outputFormat.setAttribute('aria-label', `Download format: ${outputFormat.options[outputFormat.selectedIndex].text}`);
+  };
+  outputFormat?.addEventListener('change', () => { updateOutputFormat(); requestEstimate(); });
+  updateOutputFormat();
   fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => button.addEventListener('click', () => {
     const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
     if (!quality) return;
