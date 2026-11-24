@@ -315,9 +315,24 @@ body{
 .compression-stats .compression-saved{background:#e4f2e7;color:#19642d}.compression-stats .compression-saved small{color:#287140}
 .compression-levels h3{margin:0 0 12px;font-size:17px}
 .output-name-field{gap:5px}.output-name-control{display:flex;align-items:stretch}.tool-page[data-tool="reduce-photo-file-size"] .output-name-control input{min-width:0;min-height:36px;border-radius:9px 0 0 9px}.output-name-control span{display:grid;place-items:center;padding:0 10px;border:1px solid #bacbe0;border-left:0;border-radius:0 9px 9px 0;background:#f5f3ef;color:#6d6963;font-size:12px}
-.output-name-control select{appearance:none;flex:none;min-width:82px;min-height:40px;padding:0 30px 0 12px;border:1px solid #bacbe0;border-radius:0 9px 9px 0;background-color:#f7f8fb;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%236d6963' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:#34332f;font:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:border-color .15s,background-color .15s}
-.output-name-control select:hover{border-color:#d14836;background-color:#fff}
-.output-name-control select:focus-visible{position:relative;z-index:1;outline:3px solid #d14836;outline-offset:2px}
+.output-format-select[hidden]{display:none}
+.output-format-dropdown{position:relative;flex:none;align-self:stretch}
+.output-format-trigger{min-width:84px;height:100%;min-height:40px;padding:0 12px;border:1px solid #bacbe0;border-left:0;border-radius:0 9px 9px 0;background:linear-gradient(145deg,#fff,#f4f6fb);color:#272723;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font:700 12px 'DM Sans',sans-serif;list-style:none;transition:background .18s,border-color .18s,box-shadow .18s}
+.output-format-trigger::-webkit-details-marker{display:none}
+.output-format-trigger:hover,.output-format-dropdown[open] .output-format-trigger{background:#fff;border-color:#d14836}
+.output-format-trigger:focus-visible{position:relative;z-index:2;outline:3px solid #d14836;outline-offset:2px}
+.output-format-chevron{width:8px;height:8px;border-right:1.8px solid #77736c;border-bottom:1.8px solid #77736c;transform:translateY(-2px) rotate(45deg);transition:transform .18s}
+.output-format-dropdown[open] .output-format-chevron{transform:translateY(2px) rotate(225deg)}
+.output-format-menu{position:absolute;z-index:20;top:calc(100% + 8px);right:0;width:min(270px,calc(100vw - 40px));padding:7px;border:1px solid #e7e1d7;border-radius:14px;background:#fff;box-shadow:0 16px 42px #26251f24,0 3px 9px #26251f0c;animation:format-menu-in .16s ease-out}
+.output-format-option{position:relative;display:flex;align-items:center;gap:10px;padding:10px;border-radius:9px;cursor:pointer;transition:background .15s}
+.output-format-option:hover{background:#f7f5f1}
+.output-format-option:focus-within{outline:2px solid #d14836;outline-offset:-2px}
+.output-format-option input{position:absolute;width:1px;height:1px;min-height:0;padding:0;border:0;border-radius:0;background:transparent;opacity:0;overflow:hidden}
+.output-format-copy{display:grid;gap:2px}.output-format-copy strong{font-size:12px;color:#24231f}.output-format-copy small{font-size:10px;color:#7a776f}
+.output-format-check{margin-left:auto;width:21px;height:21px;display:grid;place-items:center;border-radius:50%;background:#f0f4ed;color:#416f42;font-size:13px;font-weight:800;opacity:0;transform:scale(.8);transition:opacity .15s,transform .15s}
+.output-format-option input:checked~.output-format-check{opacity:1;transform:scale(1)}
+@keyframes format-menu-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.output-format-trigger,.output-format-chevron,.output-format-check{transition:none}.output-format-menu{animation:none}}
 .compression-presets{display:grid;grid-template-columns:1fr;gap:9px}
 .compression-presets button{position:relative;min-height:68px;padding:12px 15px 12px 48px;border:1.5px solid #ded9ce;border-radius:15px;background:#fff;text-align:left;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px;color:#242320}
 .compression-presets button::before{content:"";position:absolute;left:15px;width:22px;height:22px;border:2px solid #99958b;border-radius:50%;background:#fff}

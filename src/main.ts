@@ -53,6 +53,10 @@ const toolForm = document.querySelector<HTMLFormElement>('#toolForm')!;
 const fields = document.querySelector<HTMLDivElement>('#workflowFields')!;
 const status = document.querySelector<HTMLElement>('#toolStatus')!;
 const submit = document.querySelector<HTMLButtonElement>('#dialogSubmit')!;
+document.addEventListener('pointerdown', (event) => {
+  const dropdown = fields.querySelector<HTMLDetailsElement>('.output-format-dropdown[open]');
+  if (dropdown && !dropdown.contains(event.target as Node)) dropdown.open = false;
+});
 let activeFilter: Category | 'All' = 'All';
 let activeTool: Tool | undefined;
 let cropper: Cropper | undefined;
@@ -110,7 +114,7 @@ function workflowMarkup(tool: Tool): string {
     <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to start.</output>
     <div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a photo to see the original and compressed versions.</small></div></div>
     <div class="compression-summary"><div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
-    <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section><div class="engine-field output-name-field"><label for="outputName">Download filename</label><div class="output-name-control"><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed-photo"><select id="outputFormat" name="outputFormat" aria-label="Download format"><option value="jpg" selected>JPG</option><option value="jpeg">JPEG</option><option value="png">PNG</option></select></div></div></div>
+    <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section><div class="engine-field output-name-field"><label for="outputName">Download filename</label><div class="output-name-control"><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed-photo"><select id="outputFormat" name="outputFormat" class="output-format-select" aria-hidden="true" tabindex="-1"><option value="jpg" selected>JPG</option><option value="jpeg">JPEG</option><option value="png">PNG</option></select><details class="output-format-dropdown"><summary class="output-format-trigger" aria-label="Download format: JPG"><span id="outputFormatLabel">JPG</span><span class="output-format-chevron" aria-hidden="true"></span></summary><div class="output-format-menu" role="group" aria-label="Choose image format"><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="jpg" checked><span class="output-format-copy"><strong>JPG</strong><small>Compact and widely supported</small></span><span class="output-format-check" aria-hidden="true">✓</span></label><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="jpeg"><span class="output-format-copy"><strong>JPEG</strong><small>Same format, .jpeg extension</small></span><span class="output-format-check" aria-hidden="true">✓</span></label><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="png"><span class="output-format-copy"><strong>PNG</strong><small>Lossless; file may be larger</small></span><span class="output-format-check" aria-hidden="true">✓</span></label></div></details></div></div></div>
     <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
     <div class="photo-download-row"></div>
   </div>`;
@@ -182,6 +186,9 @@ function openTool(tool: Tool, navigate = true): void {
   const updateOutputFormat = () => {
     if (!outputFormat) return;
     const isPng = outputFormat.value === 'png';
+    const selectedOption = outputFormat.options[outputFormat.selectedIndex];
+    const formatLabel = fields.querySelector<HTMLElement>('#outputFormatLabel');
+    const formatTrigger = fields.querySelector<HTMLElement>('.output-format-trigger');
     const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
     const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
     const palette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
@@ -198,10 +205,25 @@ function openTool(tool: Tool, navigate = true): void {
     if (targetReduction) targetReduction.textContent = isPng
       ? 'PNG is lossless; quality and target size apply to JPG/JPEG.'
       : 'Enter a target size to see the required reduction.';
-    outputFormat.setAttribute('aria-label', `Download format: ${outputFormat.options[outputFormat.selectedIndex].text}`);
+    if (formatLabel) formatLabel.textContent = selectedOption.text;
+    if (formatTrigger) formatTrigger.setAttribute('aria-label', `Download format: ${selectedOption.text}`);
+    fields.querySelectorAll<HTMLInputElement>('input[name="outputFormatChoice"]').forEach((choice) => { choice.checked = choice.value === outputFormat.value; });
   };
   outputFormat?.addEventListener('change', () => { updateOutputFormat(); requestEstimate(); });
   updateOutputFormat();
+  const formatDropdown = fields.querySelector<HTMLDetailsElement>('.output-format-dropdown');
+  const formatSummary = fields.querySelector<HTMLElement>('.output-format-trigger');
+  fields.querySelectorAll<HTMLInputElement>('input[name="outputFormatChoice"]').forEach((choice) => choice.addEventListener('change', () => {
+    if (!choice.checked || !outputFormat) return;
+    outputFormat.value = choice.value;
+    outputFormat.dispatchEvent(new Event('change', { bubbles: true }));
+    if (formatDropdown) formatDropdown.open = false;
+    formatSummary?.focus();
+  }));
+  formatDropdown?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault(); formatDropdown.open = false; formatSummary?.focus();
+  });
   fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => button.addEventListener('click', () => {
     const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
     if (!quality) return;
