@@ -8,19 +8,20 @@ The visible product brand is **Paperplane**. ProjectPDF is the repository/projec
 
 | Area | Technology | Responsibility |
 | --- | --- | --- |
-| Browser interface | TypeScript, Vite | Tool catalog, search, filters, accessible UI state, and orchestration |
-| Processing core | Rust compiled to WebAssembly | Input validation and file transformations as they are implemented |
-| Hosting | Static hosting | Serves the built application and Wasm assets; no processing server |
+| Browser interface | TypeScript, Vite | Tool catalog, accessible file workflows, local orchestration, and downloads |
+| Image processing | MozJPEG, OxiPNG, Pica, Cropper.js, Canvas | Local image encoding, lossless PNG optimization, resizing, cropping, and compositing |
+| PDF processing | pdf-lib, PDF.js, qpdf WebAssembly | Local page operations, PDF rendering, and structural compression |
+| Signature checks | PKI.js, ASN.1.js, Web Crypto | Verify PDF CMS signature integrity and certificate chains against user-supplied roots |
+| Hosting | Static hosting | Serves the app and engine assets; no processing server |
 
-TypeScript must not implement file transformations. It should pass selected bytes and options through a small Wasm adapter, receive result bytes or structured errors, and initiate downloads. Do not add upload APIs, remote conversion services, or telemetry containing file data.
+Selected files are processed in the browser and are not sent to a processing server. TypeScript coordinates the browser engines and downloads results; the JPEG, PNG, qpdf, and PDF.js codecs run in WebAssembly workers where available. Do not add upload APIs, remote conversion services, or telemetry containing file data.
 
 ## Current implementation status
 
-- The Paperplane landing page advertises the 17 tools listed below.
-- The UI is now TypeScript and configured for Vite.
-- A minimal Rust/Wasm crate is scaffolded. It currently reports every tool as `planned` and does not accept or process file bytes.
-- Tool selection reports that processing is unavailable. The current UI does not read, transform, upload, or download user files.
-- No image/PDF transformation dependency has been selected. Do not infer support, formats, options, limits, or signature guarantees from a tool's name.
+- All 17 catalog tools have local processing workflows. Engine capability and format limitations are listed below.
+- The interface is TypeScript and Vite. Heavy image codecs, PDF rendering, and qpdf load only when needed.
+- File inputs are limited to 100 MB per file. Encrypted PDFs are not supported by pdf-lib operations.
+- PDF edits and compression refuse files containing signature byte ranges, because rewriting can invalidate existing digital signatures.
 
 ### Advertised tools
 
@@ -42,7 +43,7 @@ TypeScript must not implement file transformations. It should pass selected byte
 16. Put Many Pages on One Page
 17. Verify PDF Signature
 
-These names describe the visible catalog. They do not establish that the tools work or that particular formats or guarantees are supported. Update this status and document verified capabilities as actual Rust implementations are added.
+The labels describe implemented outputs; visual PDF signing places an image and is not a cryptographic digital signature. Signature verification checks CMS integrity and a certificate chain against roots supplied by the user; it does not check revocation or timestamp authorities. Passport output uses the user-selected millimetre dimensions (35 × 45 mm by default) at 300 DPI, not a country-specific standard preset.
 
 ## Product decisions and working context
 
@@ -59,25 +60,27 @@ These names describe the visible catalog. They do not establish that the tools w
 - The user wants implementation details and exam presets to remain proprietary. Keep rule data out of static frontend bundles; however, anything delivered to a browser (JavaScript, WebAssembly, worker code, or decrypted data) can ultimately be inspected. Obfuscation, domain checks, signed URLs, Turnstile, and rate limits may deter casual copying or scraping, but cannot make downloaded client-side processing code absolutely secret.
 - Do not store uploaded file contents or decrypted presets in persistent browser storage or global application state. If remote preset delivery is added, return only the requested record and protect the endpoint with appropriate authentication/rate controls. Treat encryption in the browser as a deterrent to casual inspection, not a way to hide data from the browser user.
 
-### Processing engine direction (proposed, not implemented)
+### Processing engines and current limits
 
-These were the engines discussed for the 17 tools. They are a planning map, not confirmed dependencies or working capabilities. Check browser/Wasm compatibility, maintenance, output quality, and each license before adopting them.
+These engines are installed and used by the corresponding workflows. Their output still depends on browser codecs and input files; none of the tools uploads user files.
 
-| Tool(s) | Engine direction discussed |
+| Tool(s) | Engine and behavior |
 | --- | --- |
-| Reduce Photo File Size; Convert Photo to JPG | MozJPEG; target-size search for compression. Optional HEIC support would need a compatible decoder. |
-| Reduce PDF File Size | A separate Ghostscript/Wasm compression component for stronger quality/size control. Keep its source and license obligations isolated from the rest of the website. A qpdf-wasm lossless cleanup pass was also discussed as an optional distinct pass; it is not a substitute for image recompression. |
-| Reduce Signature File Size | OxiPNG for lossless PNG output, or MozJPEG when using a white background. |
-| Change Signature Width & Height; Change Photo Width & Height | Pica for image resizing. |
-| Make PDF from Photos; Merge PDF Files; Split PDF; Delete PDF Pages; Sign PDF placement; Put Many Pages on One Page | pdf-lib was discussed for PDF creation and page operations. |
-| Crop Photo | Cropper.js for crop interaction, with output rendered at the source pixel resolution. |
-| Make Passport Size Photo; Add Name & Date on Photo | Canvas for sheet layout and text rendering; Pica for image resizing. Use appropriately licensed fonts. |
-| Convert PDF to JPG | PDF.js for page rendering, then MozJPEG or OxiPNG for image output. |
-| Verify PDF Signature | Parse signature fields and byte ranges, then use PKI.js/asn1js for cryptographic validation. Merely reading a signature field is not verification. |
+| Reduce Photo File Size; Convert Photo to JPG | MozJPEG WebAssembly encoder. Compression searches quality levels to approach an optional target; only JPEG output is produced. Browser-decodable formats only; HEIC/HEIF is not included. |
+| Reduce PDF File Size | qpdf WebAssembly recompresses Flate streams, generates object streams, and optimizes embedded images using a user-selected JPEG quality. The image pass is lossy and can reduce image detail; qpdf does not resample images. Files may not shrink when their content is already optimized. Ghostscript is not bundled. |
+| Reduce Signature File Size | OxiPNG losslessly optimizes PNG and preserves transparency; other supported images are encoded as JPEG on white. |
+| Change Signature Width & Height; Change Photo Width & Height | Pica resize to the requested pixel dimensions; output is PNG. |
+| Make PDF from Photos; Merge PDF Files; Split PDF; Delete PDF Pages; Sign PDF placement; Put Many Pages on One Page | pdf-lib creates/edits pages and embeds signature images. Split exports selected pages in a ZIP. “Sign PDF” places an image and does not create a cryptographic PDF signature. |
+| Crop Photo | Cropper.js selects the area; Canvas exports it at the selected source-pixel dimensions. |
+| Make Passport Size Photo; Add Name & Date on Photo | Canvas and Pica render user-selected millimetre dimensions (default 35 × 45 at 300 DPI) and user-entered text. Country-specific presets are not bundled. |
+| Convert PDF to JPG | PDF.js renders chosen pages; MozJPEG encodes them and a ZIP contains the results. |
+| Verify PDF Signature | PKI.js/ASN.1.js verify CMS signatures and certificate chains against trust roots provided by the user. Revocation and timestamp authority checks are not performed. |
 
-**PDF compression is intentionally a separate component.** If the Ghostscript/Wasm portion is open-sourced, publish and comply with the license for that component. Keeping the rest of the website in a separate repository/component does not by itself remove obligations triggered by how the Ghostscript component is distributed or linked. Confirm the applicable Ghostscript license and distribution model before release; do not copy or modify its code to evade licensing.
+PDFs protected with passwords are not supported. Editing/compression is refused when a `/ByteRange` signature is detected to avoid silently invalidating a digital signature. A file-size target is best-effort and can be impossible for some images. Per-file input limit: 100 MB.
 
-Do not present the planned engine choices as settled technical facts in the product UI. The user should see the result and controls (for example, target size, quality, dimensions, or page selection), while implementation details remain documented here for maintainers.
+Ghostscript/Wasm remains excluded pending a separate distribution and license decision. qpdf provides local structural compression and image optimization, but does not resample images like a dedicated Ghostscript compression workflow could.
+
+Keep engine details documented for maintainers; the product UI presents user-facing controls such as target size, quality, dimensions, or page selection.
 
 ### Deployment and capacity questions
 
@@ -88,44 +91,41 @@ Do not present the planned engine choices as settled technical facts in the prod
 
 Requirements:
 
-- Node.js 20.19+ or 22.12+ and npm, as required by the selected Vite 8 line.
-- Rust via rustup, the `wasm32-unknown-unknown` target, and `wasm-pack`.
+- Node.js 20.19+ or 22.12+ and a package manager, as required by the selected Vite 8 line.
 
 Install the browser toolchain dependencies and start the app:
 
 ```sh
-npm install
-rustup target add wasm32-unknown-unknown
-cargo install wasm-pack
-npm run dev
+pnpm install
+pnpm dev
 ```
 
-The `predev` script builds the Rust crate for the browser before starting Vite. The generated bindings and Wasm binary are written to `rust/core/pkg/` and are ignored by Git.
-
-The `build:wasm` script checks for `wasm-pack`, installs the Rust toolchain and Wasm target on Linux if they are missing, and then builds the Rust crate in the same process. A fresh Linux build requires `curl` and network access to Rust's official installer and crates.io. On other platforms, install Rust, the Wasm target, and `wasm-pack` using the commands above first. `npm run build` runs this step before type-checking and building the static site.
+The dev and build hooks generate the third-party notices page and bundle all processing engines locally with Vite. Rust/Wasm runtime setup is not required; the legacy crate under `rust/core` is not used by these workflows.
 
 Create a static production build with:
 
 ```sh
-npm run build
+pnpm build
 ```
 
-This builds Wasm, runs the TypeScript type checker, then writes the static site to `dist/`. `npm run preview` serves that built site locally. No test command is configured yet.
+This runs the TypeScript type checker and writes the static site, Wasm codecs, workers, and license notices to `dist/`. `pnpm preview` serves that build locally. No test command is configured yet.
 
-Cloudflare Workers deploys the built static files from `dist/` using `wrangler.jsonc`; the Wrangler CLI is installed as a project development dependency. The Pages/Workers build must run `npm run build` before `npx wrangler deploy`.
+Cloudflare Workers deploys the built static files from `dist/` using `wrangler.jsonc`; the Wrangler CLI is installed as a project development dependency. The build must run `pnpm build` before `pnpm exec wrangler deploy`.
 
 ## Dependencies selected
 
 - [Vite](https://vite.dev/guide/) provides the TypeScript-aware static-site development and build pipeline. Vite transpiles TypeScript; the configured `tsc --noEmit` command performs type checking.
 - [TypeScript](https://www.typescriptlang.org/docs/) provides static types for the browser interface.
-- [wasm-bindgen](https://rustwasm.github.io/docs/wasm-bindgen/) exposes the narrow Rust API to browser JavaScript; [wasm-pack](https://rustwasm.github.io/docs/wasm-pack/) packages the browser-target bindings.
-
-No PDF or image transformation library is currently selected. Verify target compatibility, format support, maintenance, and operation coverage before adding one.
+- [MozJPEG and OxiPNG through jSquash](https://github.com/jamsinclair/jSquash) provide browser WebAssembly codecs.
+- [Pica](https://github.com/nodeca/pica) resizes image canvases; [Cropper.js](https://github.com/fengyuanchen/cropperjs) provides crop selection.
+- [pdf-lib](https://github.com/Hopding/pdf-lib) edits pages and embeds image content; [PDF.js](https://github.com/mozilla/pdf.js) renders pages to canvas.
+- [qpdf WebAssembly](https://www.npmjs.com/package/@wasm-zoo/qpdf) performs structural and image optimization; its bundled license notices are shipped with the site.
+- [PKI.js](https://pkijs.org/docs/examples/other/how-to-verify-a-signature-in-a-PDF-file/) and ASN.1.js parse and verify PDF CMS signatures against user-selected trust roots.
 
 ## Implementation principles
 
 1. Process files on-device in browser memory. Never send file bytes to a server or third party.
-2. Keep transformations in Rust; keep presentation and orchestration in TypeScript.
+2. Keep transformations local in the selected browser engines; use TypeScript for presentation, validation, and orchestration.
 3. Wait for an explicit user action before reading and processing selected files.
 4. Report unsupported, invalid, malformed, encrypted, or oversized inputs clearly where detectable.
 5. Document capabilities only when supported by the implementation and verified dependencies.

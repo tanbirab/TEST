@@ -2,18 +2,30 @@
   "name": "projectpdf",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "pnpm@11.25.0",
   "type": "module",
   "scripts": {
-    "build:wasm": "node scripts/build-wasm.mjs",
-    "prebuild": "npm run build:wasm",
-    "predev": "npm run build:wasm",
+    "prebuild": "node scripts/write-third-party-notices.mjs",
+    "predev": "node scripts/write-third-party-notices.mjs",
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "wrangler": "^4.166.0",
     "typescript": "^7.0.2",
-    "vite": "^8.3.8"
+    "vite": "^8.3.8",
+    "wrangler": "^4.166.0"
+  },
+  "dependencies": {
+    "@jsquash/jpeg": "^1.6.0",
+    "@jsquash/oxipng": "^2.3.0",
+    "@wasm-zoo/qpdf": "^0.1.1",
+    "asn1js": "^4.1.0",
+    "cropperjs": "1.6.2",
+    "fflate": "^0.8.3",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.5.438",
+    "pica": "^10.0.3",
+    "pkijs": "^4.0.1"
   }
 }

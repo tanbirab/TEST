@@ -236,3 +236,28 @@ body{
 
 /* Keep the modal anchored to the viewport, even when a lower card is opened. */
 .tool-dialog{position:fixed;inset:0;margin:auto;max-height:calc(100dvh - 32px);overflow:auto}
+.tool-dialog{width:min(560px,calc(100vw - 28px));padding:28px;background:#fff;border:1px solid #cbd9eb;border-radius:18px;box-shadow:0 24px 80px #15294235;color:#202820}
+.tool-dialog::backdrop{background:#20282080;backdrop-filter:blur(3px)}
+.tool-dialog .dialog-icon{margin-bottom:12px}
+.engine-form{display:grid;gap:14px}
+.engine-field{display:grid;gap:6px}
+.engine-field label{font-size:12px;font-weight:700;color:#303b32}
+.engine-field input:not([type="range"]){width:100%;min-height:44px;padding:10px 12px;border:1px solid #bacbe0;border-radius:9px;background:#fff;color:#202820;font:inherit;font-size:14px}
+.engine-field input[type="file"]{padding:9px;font-size:12px}
+.engine-field input[type="range"]{width:100%;accent-color:#d14836}
+.engine-field small,.engine-hint{margin:0;color:#6f796f;font-size:11px;line-height:1.55}
+.engine-hint{padding:10px 12px;border-radius:9px;background:#f3f7fc}
+.file-preview{display:grid;gap:10px;max-height:340px;overflow:auto}
+.file-preview img{display:block;max-width:100%;max-height:280px;margin-inline:auto;border-radius:9px;object-fit:contain}
+.file-preview.crop-preview img{max-height:420px}
+.file-summary{margin:0;white-space:pre-line;overflow-wrap:anywhere;font-size:11px;color:#667166}
+.tool-dialog .tool-status{margin:0;min-height:45px}
+.tool-dialog .privacy-note{margin-top:14px}
+.engine-form :focus-visible{outline:3px solid #d14836;outline-offset:2px}
+.dialog-submit:disabled{opacity:.72}
+@media(max-width:650px){.tool-dialog{padding:24px 20px;max-height:calc(100dvh - 20px)}.engine-field input:not([type="range"]){font-size:max(1rem,1em)}}
+.license-table-wrap{max-width:100%;overflow:auto;margin-top:22px}
+.license-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}
+.license-table-wrap th,.license-table-wrap td{padding:10px;border-bottom:1px solid #dce5f1;vertical-align:top}
+.license-table-wrap a,.policy-links a{color:#b8392a;text-decoration:underline;text-underline-offset:2px}
+.policy-links{margin-top:24px}

@@ -1,5 +1,7 @@
 node_modules/
 dist/
+/public/third-party-notices.html
+/public/third-party-licenses/
 rust/core/pkg/
 rust/core/target/
 .wrangler/
