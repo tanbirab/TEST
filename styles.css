@@ -242,6 +242,7 @@ body{
 .tool-page-heading .dialog-icon{width:68px;height:68px;flex:none;margin:0;background:#e9f0e2;border-radius:17px}
 .tool-page .eyebrow{font-size:10px;letter-spacing:1.6px;color:#748070}
 .tool-page h1{font:800 clamp(27px,4vw,38px)/1.12 Manrope,sans-serif;letter-spacing:-1px;margin:6px 0}
+.tool-page h1:focus{outline:none}
 .tool-page-heading p{color:#788176;font-size:15px;margin:0}
 .tool-page .privacy-note{text-align:left}
 .engine-form{display:grid;gap:14px}
