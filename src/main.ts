@@ -45,8 +45,11 @@ const dialog = document.querySelector<HTMLDialogElement>('#toolDialog')!;
 const dialogTitle = document.querySelector<HTMLElement>('#dialogTitle')!;
 const dialogIcon = document.querySelector<HTMLElement>('#dialogIcon')!;
 const dialogDescription = document.querySelector<HTMLElement>('#dialogDescription')!;
+let activeFilter: Category | 'All' = 'All';
+
 function renderTools(): void {
-  grid.innerHTML = tools.map((tool) => {
+  const visibleTools = activeFilter === 'All' ? tools : tools.filter((tool) => tool.category === activeFilter);
+  grid.innerHTML = visibleTools.map((tool) => {
     const index = tools.indexOf(tool);
     return `<button class="tool-card" type="button" aria-label="View status for ${tool.name}" data-index="${index}">
       <span class="card-top"><span class="tool-illustration" aria-hidden="true">${inlineIcon(tool.icon, `card-${index}`)}</span><span class="tool-tag">${tool.tag}</span></span>
@@ -57,6 +60,15 @@ function renderTools(): void {
     card.addEventListener('click', () => void openTool(tools[Number(card.dataset.index)]));
   });
 }
+
+document.querySelectorAll<HTMLButtonElement>('.filter').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelector('.filter.active')?.classList.remove('active');
+    button.classList.add('active');
+    activeFilter = (button.dataset.filter ?? 'All') as Category | 'All';
+    renderTools();
+  });
+});
 
 async function openTool(tool: Tool): Promise<void> {
   dialogTitle.textContent = tool.name;
