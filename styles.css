@@ -76,7 +76,7 @@ body{background:var(--paper);color:var(--ink)}
 .filter{border-radius:10px;padding:10px 14px}
 .tool-grid{gap:16px}
 .tool-card{min-height:145px;border-color:#dfd1a6;border-radius:15px;background:#fff;box-shadow:0 5px 18px #4a30200d}
-.tool-card:hover{transform:translateY(-4px);border-color:#d14836;box-shadow:0 15px 30px #4a302018}
+.tool-card:hover{border-color:#d14836;box-shadow:0 15px 30px #4a302018}
 @media(max-width:650px){.tool-section{padding-top:32px}.section-heading h2{font-size:35px;letter-spacing:-1.5px}.tool-controls{align-items:stretch}.search-box{width:100%}.filters{justify-content:space-between;overflow-x:auto}.filter{padding:9px 10px;white-space:nowrap}}
 
 /* Cool blue glass surfaces; keep the brand red as the primary accent. */
@@ -139,8 +139,8 @@ body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;ba
 .tool-section{background:transparent!important}
 .tool-section::before{content:none!important;display:none!important}
 .tool-section::before{background:radial-gradient(ellipse at 50% 2%,#8bb8f533,transparent 45%),radial-gradient(ellipse at 95% 4%,#D1483610,transparent 32%),repeating-linear-gradient(90deg,#6689b51a 0 1px,transparent 1px 88px),repeating-linear-gradient(0deg,#6689b514 0 1px,transparent 1px 88px)}
-.tool-card{background:rgba(255,255,255,.94);backdrop-filter:blur(16px) saturate(135%);border-color:#c8d7e9;box-shadow:0 6px 20px #294b7410}
-.tool-card:hover{background:rgba(255,255,255,.98);border-color:#D14836;box-shadow:0 15px 32px #294b7418}
+.tool-card{background:#fff;border-color:#c8d7e9;box-shadow:0 6px 20px #294b7410}
+.tool-card:hover{background:#fff;border-color:#D14836;box-shadow:0 15px 32px #294b7418}
 .tool-icon,.tool-icon.green,.tool-icon.peach,.tool-icon.lilac,.tool-icon.blue,.tool-icon.yellow,.tool-icon.rose,.tool-card:nth-child(4n + 1) .tool-icon,.tool-card:nth-child(4n + 1) .tool-icon.green,.tool-card:nth-child(4n + 1) .tool-icon.peach,.tool-card:nth-child(4n + 1) .tool-icon.lilac,.tool-card:nth-child(4n + 1) .tool-icon.blue,.tool-card:nth-child(4n + 1) .tool-icon.yellow,.tool-card:nth-child(4n + 1) .tool-icon.rose{background:#e8f0fb;color:#b8392a}
 .tool-tag{background:#edf3fb;border-color:#cbd9eb;color:#8d3025}
 .tool-count,.search-box,.filters{background:rgba(255,255,255,.95);backdrop-filter:blur(14px) saturate(130%);border-color:#cbd9eb}
