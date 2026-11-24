@@ -108,7 +108,7 @@ function workflowMarkup(tool: Tool): string {
     <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to start.</output>
     <div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a photo to see the original and compressed versions.</small></div></div>
     <div class="compression-summary"><div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
-    <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section></div>
+    <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section><div class="engine-field output-name-field"><label for="outputName">Download filename</label><div class="output-name-control"><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed-photo"><span>.jpg</span></div></div></div>
     <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
   </div>`;
   if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>PNG files retain transparency and use lossless optimization.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a signature image to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
@@ -255,6 +255,8 @@ async function showSelectedFiles(files: File[]): Promise<void> {
     fields.querySelector<HTMLElement>('#compressedSize')!.textContent = 'Preparing…';
     fields.querySelector<HTMLElement>('#savedPercent')!.textContent = '—';
     submit.disabled = false; submit.textContent = 'Preparing preview…';
+    const outputName = fields.querySelector<HTMLInputElement>('#outputName');
+    if (outputName) outputName.value = safeDownloadStem(image.name.replace(/\.[^.]+$/, '')) + '-compressed';
   }
   const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
   if (quality) {
@@ -337,6 +339,10 @@ function requestEstimate(): void {
 }
 
 function formatBytes(bytes: number): string { return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(2)} MB` : `${(bytes / 1024).toFixed(0)} KB`; }
+function safeDownloadStem(value: string): string {
+  return value.trim().replace(/[<>:"/\\|?*\u0000-\u001f]/g, '_').replace(/[. ]+$/g, '').slice(0, 100) || 'compressed-photo';
+}
+
 function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOutput[]): void {
   const bytes = outputs.reduce((total, output) => total + output.blob.size, 0);
   const ratio = Math.round((1 - bytes / file.size) * 100);
@@ -409,13 +415,18 @@ toolForm.addEventListener('submit', async (event) => {
   try {
     const source = files?.[0];
     const cached = source && estimateCache?.key === estimateKey(source, activeTool.name) ? estimateCache.outputs : undefined;
-    const outputs: EngineOutput[] = cached ?? await runEngine({
+    let outputs: EngineOutput[] = cached ?? await runEngine({
       tool: activeTool.name,
       files: files ? [...files] : [],
       extraFiles: extra,
       form: toolForm,
       report: (message) => { status.textContent = message; },
     });
+    if (activeTool.name === 'Reduce Photo File Size' && outputs.length === 1) {
+      const requestedStem = fields.querySelector<HTMLInputElement>('#outputName')?.value ?? '';
+      const extension = outputs[0].name.match(/\.[^.]+$/)?.[0] ?? '.jpg';
+      outputs = [{ ...outputs[0], name: `${safeDownloadStem(requestedStem)}${extension}` }];
+    }
     downloadOutputs(outputs);
     status.textContent = outputs.length === 1
       ? `Done. Downloaded ${outputs[0].name}.${outputs[0].message ? ` ${outputs[0].message}` : ''}`
