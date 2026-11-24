@@ -110,6 +110,7 @@ function workflowMarkup(tool: Tool): string {
     <div class="compression-summary"><div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
     <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section><div class="engine-field output-name-field"><label for="outputName">Download filename</label><div class="output-name-control"><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed-photo"><span>.jpg</span></div></div></div>
     <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
+    <div class="photo-download-row"></div>
   </div>`;
   if (name === 'Reduce Signature File Size') return `${fileInput('Choose a signature image', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">82%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="82"><small>PNG files retain transparency and use lossless optimization.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a signature image to preview compression.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Change Photo Width & Height' || name === 'Change Signature Width & Height') return `${fileInput(name.includes('Signature') ? 'Choose a signature image' : 'Choose a photo', 'image/*')}${numericField('width', 'Width (pixels)', 800)}${numericField('height', 'Height (pixels)', 600)}<div id="filePreview" class="file-preview"></div>`;
@@ -129,6 +130,7 @@ function workflowMarkup(tool: Tool): string {
 }
 
 function openTool(tool: Tool, navigate = true): void {
+  if (submit.parentElement !== toolForm) toolForm.append(submit);
   releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; window.clearTimeout(estimateTimer); estimateVersion += 1;
   dialogTitle.textContent = tool.name;
   dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
@@ -139,6 +141,11 @@ function openTool(tool: Tool, navigate = true): void {
   fields.classList.toggle('photo-workflow-fields', isPhotoCompressor);
   toolPage.classList.remove('has-photo');
   fields.innerHTML = workflowMarkup(tool);
+  if (isPhotoCompressor) {
+    const downloadRow = fields.querySelector<HTMLElement>('.photo-download-row');
+    const filenameField = fields.querySelector<HTMLElement>('.output-name-field');
+    if (downloadRow && filenameField) downloadRow.append(filenameField, submit);
+  }
   status.textContent = 'Choose your file and settings. Processing runs in your browser.';
   submit.textContent = tool.name === 'Reduce Photo File Size' ? 'Choose a photo first' : 'Run tool'; submit.disabled = tool.name === 'Reduce Photo File Size';
   catalog.hidden = true; toolPage.hidden = false;
