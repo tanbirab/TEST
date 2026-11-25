@@ -18,30 +18,29 @@ Selected files are processed in the browser and are not sent to a processing ser
 
 ## Current implementation status
 
-- All 17 catalog tools have local processing workflows. Engine capability and format limitations are listed below.
+- All 16 catalog tools have local processing workflows. Engine capability and format limitations are listed below.
 - The interface is TypeScript and Vite. Heavy image codecs, PDF rendering, and Ghostscript load only when needed.
 - File inputs are limited to 100 MB per file. Encrypted PDFs are not supported by pdf-lib operations.
 - PDF edits and compression refuse files containing signature byte ranges, because rewriting can invalidate existing digital signatures.
 
 ### Advertised tools
 
-1. Reduce Photo File Size
+1. Compress Image
 2. Reduce PDF File Size
-3. Reduce Signature File Size
-4. Change Signature Width & Height
-5. Change Photo Width & Height
-6. Make PDF from Photos
-7. Convert Photo to JPG
-8. Merge PDF Files
-9. Crop Photo
-10. Make Passport Size Photo
-11. Add Name & Date on Photo
-12. Split PDF
-13. Convert PDF to JPG
-14. Delete PDF Pages
-15. Sign PDF
-16. Put Many Pages on One Page
-17. Verify PDF Signature
+3. Change Signature Width & Height
+4. Change Photo Width & Height
+5. Make PDF from Photos
+6. Convert Photo to JPG
+7. Merge PDF Files
+8. Crop Photo
+9. Make Passport Size Photo
+10. Add Name & Date on Photo
+11. Split PDF
+12. Convert PDF to JPG
+13. Delete PDF Pages
+14. Sign PDF
+15. Put Many Pages on One Page
+16. Verify PDF Signature
 
 The labels describe implemented outputs; visual PDF signing places an image and is not a cryptographic digital signature. Signature verification checks CMS integrity and a certificate chain against roots supplied by the user; it does not check revocation or timestamp authorities. Passport output uses the user-selected millimetre dimensions (35 × 45 mm by default) at 300 DPI, not a country-specific standard preset.
 
@@ -50,7 +49,7 @@ The labels describe implemented outputs; visual PDF signing places an image and 
 ### Product and visual direction
 
 - The user-facing brand is **Paperplane**; the project/repository is **ProjectPDF**.
-- Keep the 17 tools visible immediately on the landing page. Do not add a large hero section above the tool catalog.
+- Keep the 16 tools visible immediately on the landing page. Do not add a large hero section above the tool catalog.
 - Use the brand colors red `#D14836`, gold `#ECD06F`, and white, with a light blue tint and soft warm light in the background.
 - The grid and warm/cool gradient should be one continuous page background behind the header, tool catalog, and lower sections. Do not give the header or catalog a separate opaque background block. Keep cards and controls readable against it.
 
@@ -66,9 +65,8 @@ These engines are installed and used by the corresponding workflows. Their outpu
 
 | Tool(s) | Engine and behavior |
 | --- | --- |
-| Reduce Photo File Size; Convert Photo to JPG | MozJPEG WebAssembly encoder. Compression searches quality levels to approach an optional target; only JPEG output is produced. Browser-decodable formats only; HEIC/HEIF is not included. |
+| Compress Image; Convert Photo to JPG | MozJPEG WebAssembly encoder for JPG/JPEG output, with quality and best-effort target-size controls. Compress Image can also produce palette-optimized PNG while preserving transparency. Browser-decodable formats only; HEIC/HEIF is not included. |
 | Reduce PDF File Size | A separate Ghostscript 10.08.0 WebAssembly component uses `pdfwrite` to recompress the document and downsample images at a user-selected resolution/quality. This is lossy and may change document internals, forms, annotations, or metadata. Files with digital signatures are rejected; files may not shrink if already optimized. |
-| Reduce Signature File Size | OxiPNG optimizes PNG and preserves transparency. At the full-color setting it stays lossless; lowering the palette quantizes RGB while retaining alpha, with adjustable dithering and best-effort target-size search. PNG compression effort selects OxiPNG levels 1–4. Other supported images are encoded as JPEG on white. |
 | Change Signature Width & Height; Change Photo Width & Height | Pica resize to the requested pixel dimensions; output is PNG. |
 | Make PDF from Photos; Merge PDF Files; Split PDF; Delete PDF Pages; Sign PDF placement; Put Many Pages on One Page | pdf-lib creates/edits pages and embeds signature images. Split exports selected pages in a ZIP. “Sign PDF” places an image and does not create a cryptographic PDF signature. |
 | Crop Photo | Cropper.js selects the area; Canvas exports it at the selected source-pixel dimensions. |

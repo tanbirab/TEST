@@ -4,7 +4,6 @@ import { downloadOutputs, runEngine, type EngineOutput } from './engines';
 import { releaseMozJpegFile } from './image-codec';
 import icon01 from './assets/icons/01-reduce-photo-file-size.svg?raw';
 import icon02 from './assets/icons/02-reduce-pdf-file-size.svg?raw';
-import icon03 from './assets/icons/03-reduce-signature-file-size.svg?raw';
 import icon04 from './assets/icons/04-change-signature-width-height.svg?raw';
 import icon05 from './assets/icons/05-change-photo-width-height.svg?raw';
 import icon06 from './assets/icons/06-make-pdf-from-photos.svg?raw';
@@ -21,12 +20,11 @@ import icon16 from './assets/icons/16-put-many-pages-on-one-page.svg?raw';
 import icon17 from './assets/icons/17-verify-pdf-signature.svg?raw';
 
 type Category = 'Images' | 'PDFs' | 'Signatures';
-type Tool = { name: string; description: string; category: Category; icon: string; tone: string; tag: string };
+type Tool = { name: string; description: string; category: Category | Category[]; icon: string; tone: string; tag: string };
 
 const tools: Tool[] = [
-  { name: 'Reduce Photo File Size', description: 'Compress photos for easier storage and sharing.', category: 'Images', icon: icon01, tone: 'green', tag: 'Popular' },
+  { name: 'Compress Image', description: 'Reduce the size of photos, signatures, and more.', category: ['Images', 'Signatures'], icon: icon01, tone: 'green', tag: '' },
   { name: 'Reduce PDF File Size', description: 'Make PDFs smaller and easier to share.', category: 'PDFs', icon: icon02, tone: 'peach', tag: 'Popular' },
-  { name: 'Reduce Signature File Size', description: 'Make a signature image smaller for uploading or sharing.', category: 'Signatures', icon: icon03, tone: 'lilac', tag: '' },
   { name: 'Change Signature Width & Height', description: 'Resize a signature image to the dimensions you need.', category: 'Signatures', icon: icon04, tone: 'blue', tag: '' },
   { name: 'Change Photo Width & Height', description: 'Set a photo to a specific width and height.', category: 'Images', icon: icon05, tone: 'green', tag: '' },
   { name: 'Make PDF from Photos', description: 'Combine photos into a single PDF file.', category: 'Images', icon: icon06, tone: 'yellow', tag: 'Popular' },
@@ -72,10 +70,13 @@ let targetQualityBaseline: { file: File; quality: number; bytes: number } | unde
 let targetPaletteBaseline: { file: File; paletteColors: number; bytes: number } | undefined;
 let pendingPhotoDownload = false;
 
-function isSignaturePngSelected(): boolean {
-  if (activeTool?.name !== 'Reduce Signature File Size') return false;
-  const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
-  return Boolean(file && (file.type === 'image/png' || file.name.toLowerCase().endsWith('.png')));
+function isPngCompressionSelected(): boolean {
+  return activeTool?.name === 'Compress Image'
+    && (toolForm.elements.namedItem('outputFormat') as HTMLSelectElement | null)?.value === 'png';
+}
+
+function isCompressImageTool(name = activeTool?.name): boolean {
+  return name === 'Compress Image';
 }
 
 function pngCompressionLevel(quality: number): number {
@@ -83,7 +84,7 @@ function pngCompressionLevel(quality: number): number {
 }
 
 function renderTools(): void {
-  const visibleTools = activeFilter === 'All' ? tools : tools.filter((tool) => tool.category === activeFilter);
+  const visibleTools = activeFilter === 'All' ? tools : tools.filter((tool) => (Array.isArray(tool.category) ? tool.category : [tool.category]).includes(activeFilter as Category));
   grid.innerHTML = visibleTools.map((tool) => {
     const index = tools.indexOf(tool);
     return `<button class="tool-card" type="button" aria-label="Open ${tool.name}" data-index="${index}">
@@ -119,12 +120,11 @@ function numericField(id: string, label: string, value: number, min = 1): string
 
 function workflowMarkup(tool: Tool): string {
   const name = tool.name;
-  if (name === 'Reduce Photo File Size' || name === 'Reduce Signature File Size') {
-    const isSignature = name === 'Reduce Signature File Size';
-    const imageLabel = isSignature ? 'signature image' : 'photo';
-    const formatSelector = isSignature ? '' : `<select id="outputFormat" name="outputFormat" class="output-format-select" hidden aria-hidden="true" tabindex="-1"><option value="jpg" selected>JPG</option><option value="jpeg">JPEG</option><option value="png">PNG</option></select><details class="output-format-dropdown"><summary class="output-format-trigger" aria-label="Download format: JPG"><span id="outputFormatLabel">JPG</span><span class="output-format-chevron" aria-hidden="true"></span></summary><div class="output-format-menu" role="group" aria-label="Choose image format"><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="jpg" checked><span class="output-format-copy"><strong>JPG</strong><small>Compact and widely supported</small></span><span class="output-format-check" aria-hidden="true">✓</span></label><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="jpeg"><span class="output-format-copy"><strong>JPEG</strong><small>Same format, .jpeg extension</small></span><span class="output-format-check" aria-hidden="true">✓</span></label><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="png"><span class="output-format-copy"><strong>PNG</strong><small>Lossless; file may be larger</small></span><span class="output-format-check" aria-hidden="true">✓</span></label></div></details>`;
-    return `<div class="photo-compressor ${isSignature ? 'signature-compressor' : ''}">
-    <label class="photo-dropzone" for="sourceFiles"><span class="photo-upload-icon" aria-hidden="true">↥</span><strong>Drop ${imageLabel} here</strong><span class="photo-drop-help">or paste with Ctrl+V · JPG, PNG or WebP · up to 100 MB</span><span class="photo-browse">Browse files</span><input id="sourceFiles" name="sourceFiles" type="file" accept="image/*" required></label>
+  if (name === 'Compress Image') {
+    const imageLabel = 'image';
+    const formatSelector = `<select id="outputFormat" name="outputFormat" class="output-format-select" hidden aria-hidden="true" tabindex="-1"><option value="jpg" selected>JPG</option><option value="jpeg">JPEG</option><option value="png">PNG</option></select><details class="output-format-dropdown"><summary class="output-format-trigger" aria-label="Download format: JPG"><span id="outputFormatLabel">JPG</span><span class="output-format-chevron" aria-hidden="true"></span></summary><div class="output-format-menu" role="group" aria-label="Choose image format"><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="jpg" checked><span class="output-format-copy"><strong>JPG</strong><small>Compact and widely supported</small></span><span class="output-format-check" aria-hidden="true">✓</span></label><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="jpeg"><span class="output-format-copy"><strong>JPEG</strong><small>Same format, .jpeg extension</small></span><span class="output-format-check" aria-hidden="true">✓</span></label><label class="output-format-option"><input type="radio" name="outputFormatChoice" value="png"><span class="output-format-copy"><strong>PNG</strong><small>Preserves transparency; palette controls apply</small></span><span class="output-format-check" aria-hidden="true">✓</span></label></div></details>`;
+    return `<div class="photo-compressor">
+    <label class="photo-dropzone" for="sourceFiles"><span class="photo-upload-icon" aria-hidden="true">↥</span><strong>Drop an image here</strong><span class="photo-drop-help">Photos, signatures, and other images · JPG, PNG or WebP · up to 100 MB</span><span class="photo-browse">Browse files</span><input id="sourceFiles" name="sourceFiles" type="file" accept="image/*" required></label>
     <div class="photo-file-row" id="photoFileRow" hidden><span class="photo-file-mark" aria-hidden="true"></span><span class="photo-file-meta"><strong id="photoFileName"></strong><small id="photoFileDetails"></small></span><button class="photo-remove" id="photoRemove" type="button">Remove</button></div>
     <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality"><span id="qualityLabel">JPEG quality</span> <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
     <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a ${imageLabel} to start.</output>
@@ -157,12 +157,10 @@ function openTool(tool: Tool, navigate = true): void {
   dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
   dialogDescription.textContent = tool.description;
   toolPage.dataset.tool = toolSlug(tool);
-  const isPhotoCompressor = tool.name === 'Reduce Photo File Size';
-  const isSignatureCompressor = tool.name === 'Reduce Signature File Size';
-  const isImageCompressor = isPhotoCompressor || isSignatureCompressor;
+  const isImageCompressor = isCompressImageTool(tool.name);
   toolForm.classList.toggle('photo-compression-form', isImageCompressor);
   fields.classList.toggle('photo-workflow-fields', isImageCompressor);
-  toolPage.classList.remove('has-photo', 'has-image');
+  toolPage.classList.remove('has-image');
   fields.innerHTML = workflowMarkup(tool);
   if (isImageCompressor) {
     const downloadRow = fields.querySelector<HTMLElement>('.photo-download-row');
@@ -170,19 +168,31 @@ function openTool(tool: Tool, navigate = true): void {
     if (downloadRow && filenameField) downloadRow.append(filenameField, submit);
   }
   status.textContent = 'Choose your file and settings. Processing runs in your browser.';
-  submit.textContent = isImageCompressor ? `Choose a ${isSignatureCompressor ? 'signature image' : 'photo'} first` : 'Run tool'; submit.disabled = isImageCompressor;
+  submit.textContent = isImageCompressor ? 'Choose an image first' : 'Run tool'; submit.disabled = isImageCompressor;
   catalog.hidden = true; toolPage.hidden = false;
   if (navigate) history.pushState({ paperplaneTool: true }, '', `#tool/${toolSlug(tool)}`);
   window.scrollTo({ top: 0, behavior: 'instant' });
   dialogTitle.focus({ preventScroll: true });
   const fileInputElement = toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null;
-  fileInputElement?.addEventListener('change', () => { void showSelectedFiles(fileInputElement.files ? [...fileInputElement.files] : []); requestEstimate(); });
+  fileInputElement?.addEventListener('change', () => {
+    const selectedFile = fileInputElement.files?.[0];
+    const format = fields.querySelector<HTMLSelectElement>('#outputFormat');
+    if (isImageCompressor && selectedFile && format) {
+      const preferredFormat = selectedFile.type === 'image/png' || selectedFile.name.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
+      if (format.value !== preferredFormat) {
+        format.value = preferredFormat;
+        format.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+    void showSelectedFiles(fileInputElement.files ? [...fileInputElement.files] : []);
+    requestEstimate();
+  });
   fields.querySelectorAll<HTMLInputElement>('input[type="range"], input[type="number"]').forEach((input) => {
     input.addEventListener('input', () => {
       const out = fields.querySelector<HTMLOutputElement>('#qualityValue');
       const paletteOut = fields.querySelector<HTMLOutputElement>('#paletteValue');
       if (input.name === 'quality' && out) {
-        const pngMode = isSignaturePngSelected();
+        const pngMode = isPngCompressionSelected();
         const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
         if (qualityLabel) qualityLabel.textContent = pngMode ? 'PNG compression effort' : 'JPEG quality';
         out.value = pngMode ? `Level ${pngCompressionLevel(Number(input.value))}/4` : `${input.value}%`;
@@ -191,14 +201,14 @@ function openTool(tool: Tool, navigate = true): void {
       if (input.name === 'quality') {
         const paletteValue = (toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null)?.value;
         fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => {
-          const selected = isSignaturePngSelected()
+          const selected = isPngCompressionSelected()
             ? button.dataset.quality === input.value && button.dataset.pngColors === paletteValue
             : button.dataset.quality === input.value;
           button.setAttribute('aria-pressed', String(selected));
         });
       }
-      if (input.name === 'paletteColors' && paletteOut) { paletteOut.value = input.value === '256' && !isSignaturePngSelected() ? 'Full color' : `${input.value} colors`; input.setAttribute('aria-valuetext', paletteOut.value); }
-      if (input.name === 'paletteColors' && isSignaturePngSelected()) {
+      if (input.name === 'paletteColors' && paletteOut) { paletteOut.value = input.value === '256' && !isPngCompressionSelected() ? 'Full color' : `${input.value} colors`; input.setAttribute('aria-valuetext', paletteOut.value); }
+      if (input.name === 'paletteColors' && isPngCompressionSelected()) {
         const qualityValue = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
         fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => {
           button.setAttribute('aria-pressed', String(button.dataset.pngColors === input.value && button.dataset.quality === qualityValue?.value));
@@ -207,10 +217,10 @@ function openTool(tool: Tool, navigate = true): void {
       const ditheringOut = fields.querySelector<HTMLOutputElement>('#ditheringValue');
       if (input.name === 'dithering' && ditheringOut) { ditheringOut.value = Number(input.value).toFixed(2); input.setAttribute('aria-valuetext', ditheringOut.value); }
       const ditheringInput = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
-      if (input.name === 'paletteColors' && ditheringInput) ditheringInput.disabled = input.value === '256' && !isSignaturePngSelected();
+      if (input.name === 'paletteColors' && ditheringInput) ditheringInput.disabled = input.value === '256' && !isPngCompressionSelected();
       if (input.name === 'targetKb') {
         updateTargetReduction();
-        if (isSignaturePngSelected()) adjustPaletteForTarget();
+        if (isPngCompressionSelected()) adjustPaletteForTarget();
         else adjustQualityForTarget();
         requestEstimate();
       }
@@ -219,7 +229,7 @@ function openTool(tool: Tool, navigate = true): void {
   });
   const initialPalette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
   const initialDithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
-  if (initialPalette && initialDithering) initialDithering.disabled = initialPalette.value === '256';
+  if (initialPalette && initialDithering) initialDithering.disabled = initialPalette.value === '256' && !isPngCompressionSelected();
   const outputFormat = fields.querySelector<HTMLSelectElement>('#outputFormat');
   const updateOutputFormat = () => {
     if (!outputFormat) return;
@@ -233,15 +243,18 @@ function openTool(tool: Tool, navigate = true): void {
     const dithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
     const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
     const targetReduction = fields.querySelector<HTMLElement>('#targetReduction');
-    if (quality) quality.disabled = isPng;
-    if (target) target.disabled = isPng;
-    if (palette) palette.disabled = isPng;
-    if (dithering) dithering.disabled = isPng || palette?.value === '256';
-    fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = isPng; });
-    if (qualityValue && isPng) qualityValue.value = 'PNG · lossless';
-    else if (qualityValue && quality) qualityValue.value = `${quality.value}%`;
+    const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
+    if (quality) quality.disabled = false;
+    if (target) target.disabled = false;
+    if (palette) palette.disabled = false;
+    if (dithering) dithering.disabled = !isPng && palette?.value === '256';
+    fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = false; });
+    if (qualityLabel) qualityLabel.textContent = isPng ? 'PNG compression effort' : 'JPEG quality';
+    if (qualityValue && quality) qualityValue.value = isPng ? `Level ${pngCompressionLevel(Number(quality.value))}/4` : `${quality.value}%`;
+    const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
+    if (paletteValue && palette) paletteValue.value = isPng ? `${palette.value} colors` : palette.value === '256' ? 'Full color' : `${palette.value} colors`;
     if (targetReduction) targetReduction.textContent = isPng
-      ? 'PNG is lossless; quality and target size apply to JPG/JPEG.'
+      ? 'PNG keeps transparency. Target size adjusts the color palette.'
       : 'Enter a target size to see the required reduction.';
     if (formatLabel) formatLabel.textContent = selectedOption.text;
     if (formatTrigger) formatTrigger.setAttribute('aria-label', `Download format: ${selectedOption.text}`);
@@ -263,7 +276,7 @@ function openTool(tool: Tool, navigate = true): void {
     event.preventDefault(); formatDropdown.open = false; formatSummary?.focus();
   });
   fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => button.addEventListener('click', () => {
-    if (isSignaturePngSelected()) {
+    if (isPngCompressionSelected()) {
       const palette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
       const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
       if (!palette || !quality) return;
@@ -301,10 +314,9 @@ function clearPhotoSelection(): void {
   if (input) input.value = '';
   releasePreview(); estimateCache = undefined; targetPaletteBaseline = undefined; estimateVersion += 1; window.clearTimeout(estimateTimer);
   fields.querySelector<HTMLElement>('#photoFileRow')?.setAttribute('hidden', '');
-  const isSignature = activeTool?.name === 'Reduce Signature File Size';
-  const imageKind = isSignature ? 'signature image' : 'photo';
+  const imageKind = 'image';
   fields.querySelector<HTMLDivElement>('#filePreview')!.innerHTML = `<div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a ${imageKind} to see the original and compressed versions.</small></div>`;
-  toolPage.classList.remove('has-photo', 'has-image');
+  toolPage.classList.remove('has-image');
   fields.querySelector<HTMLOutputElement>('#sizeEstimate')!.value = `Choose a ${imageKind} to start.`;
   fields.querySelector<HTMLElement>('#originalSize')!.textContent = '—';
   fields.querySelector<HTMLElement>('#compressedSize')!.textContent = '—';
@@ -321,11 +333,11 @@ function clearPhotoSelection(): void {
   const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
   if (qualityLabel) qualityLabel.textContent = 'JPEG quality';
   if (qualityValue && quality) qualityValue.value = `${quality.value}%`;
-  submit.disabled = true; submit.textContent = `Choose a ${isSignature ? 'signature image' : 'photo'} first`;
+  submit.disabled = true; submit.textContent = 'Choose an image first';
 }
 
 document.addEventListener('paste', (event) => {
-  if (!['Reduce Photo File Size', 'Reduce Signature File Size'].includes(activeTool?.name ?? '')) return;
+  if (!isCompressImageTool()) return;
   const file = [...(event.clipboardData?.items ?? [])].find((item) => item.type.startsWith('image/'))?.getAsFile();
   if (!file) return;
   event.preventDefault();
@@ -338,8 +350,12 @@ function toolSlug(tool: Tool): string { return tool.name.toLowerCase().replace(/
 
 function renderRoute(): void {
   const match = location.hash.match(/^#tool\/(.+)$/);
-  const selected = match ? tools.find((tool) => toolSlug(tool) === match[1]) : undefined;
+  const selected = match
+    ? tools.find((tool) => toolSlug(tool) === match[1])
+      ?? (['reduce-photo-file-size', 'reduce-signature-file-size'].includes(match[1]) ? tools.find((tool) => tool.name === 'Compress Image') : undefined)
+    : undefined;
   if (selected) {
+    if (match && match[1] !== toolSlug(selected)) history.replaceState(history.state, '', `#tool/${toolSlug(selected)}`);
     if (activeTool !== selected || toolPage.hidden) openToolFromHistory(selected);
     return;
   }
@@ -367,11 +383,8 @@ async function showSelectedFiles(files: File[]): Promise<void> {
   preview.replaceChildren(summary);
   const image = files[0];
   if (!image.type.startsWith('image/') || image.type === 'application/pdf') return;
-  const isPhotoCompressor = activeTool?.name === 'Reduce Photo File Size';
-  const isSignatureCompressor = activeTool?.name === 'Reduce Signature File Size';
-  const isImageCompressor = isPhotoCompressor || isSignatureCompressor;
+  const isImageCompressor = isCompressImageTool();
   if (isImageCompressor) toolPage.classList.add('has-image');
-  if (isPhotoCompressor) toolPage.classList.add('has-photo');
   const photoName = fields.querySelector<HTMLElement>('#photoFileName');
   if (photoName) {
     const row = fields.querySelector<HTMLElement>('#photoFileRow')!; row.hidden = false;
@@ -386,20 +399,20 @@ async function showSelectedFiles(files: File[]): Promise<void> {
   }
   const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
   if (quality) {
-    const signaturePng = (image.type === 'image/png' || image.name.toLowerCase().endsWith('.png')) && isSignatureCompressor;
+    const pngMode = isPngCompressionSelected();
     quality.disabled = false;
     const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
     const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
-    if (qualityLabel) qualityLabel.textContent = signaturePng ? 'PNG compression effort' : 'JPEG quality';
-    if (qualityValue) qualityValue.value = signaturePng ? `Level ${pngCompressionLevel(Number(quality.value))}/4` : `${quality.value}%`;
+    if (qualityLabel) qualityLabel.textContent = pngMode ? 'PNG compression effort' : 'JPEG quality';
+    if (qualityValue) qualityValue.value = pngMode ? `Level ${pngCompressionLevel(Number(quality.value))}/4` : `${quality.value}%`;
     for (const name of ['targetKb', 'paletteColors', 'dithering']) {
       const control = toolForm.elements.namedItem(name) as HTMLInputElement | null;
-      if (control) control.disabled = name === 'dithering'
+      if (control) control.disabled = name === 'dithering' && !pngMode
         && (toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null)?.value === '256';
     }
     fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = false; });
     const selectedPalette = (toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null)?.value;
-    if (signaturePng && selectedPalette) {
+    if (pngMode && selectedPalette) {
       const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
       if (paletteValue) paletteValue.value = `${selectedPalette} colors`;
       const dithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
@@ -419,7 +432,7 @@ async function showSelectedFiles(files: File[]): Promise<void> {
   const heightField = toolForm.elements.namedItem('height') as HTMLInputElement | null;
   if (widthField && heightField) { widthField.value = String(imageView.naturalWidth); heightField.value = String(imageView.naturalHeight); }
   if (photoName) fields.querySelector<HTMLElement>('#photoFileDetails')!.textContent = `${formatBytes(image.size)} · ${imageView.naturalWidth} × ${imageView.naturalHeight}`;
-  if (['Reduce Photo File Size', 'Reduce Signature File Size', 'Convert Photo to JPG'].includes(activeTool?.name ?? '')) renderComparison(image, undefined);
+  if (['Compress Image', 'Convert Photo to JPG'].includes(activeTool?.name ?? '')) renderComparison(image, undefined);
   if (activeTool?.name === 'Crop Photo') {
     const { default: CropperConstructor } = await import('cropperjs');
     if (toolPage.hidden || activeTool?.name !== 'Crop Photo') return;
@@ -441,10 +454,10 @@ function updateTargetReduction(): void {
   const field = fields.querySelector<HTMLInputElement>('#targetKb');
   const note = fields.querySelector<HTMLElement>('#targetReduction');
   if (!field || !note) return;
-  const signaturePng = isSignaturePngSelected();
+  const pngMode = isPngCompressionSelected();
   const target = Number(field.value);
   if (!field.value || !Number.isFinite(target) || target <= 0) {
-    note.textContent = signaturePng
+    note.textContent = pngMode
       ? 'PNG keeps transparency. Compression effort, palette, dithering, and target size all work.'
       : 'Enter a target size to see the required reduction.';
     return;
@@ -454,11 +467,11 @@ function updateTargetReduction(): void {
   const reduction = Math.max(0, Math.min(100, (1 - target * 1024 / file.size) * 100));
   note.textContent = reduction === 0
     ? `Your ${target} KB target is already larger than this file.`
-    : `Your ${target} KB target requires about ${Math.ceil(reduction)}% size reduction.${signaturePng ? ' The palette adjusts automatically.' : ''}`;
+    : `Your ${target} KB target requires about ${Math.ceil(reduction)}% size reduction.${pngMode ? ' The palette adjusts automatically.' : ''}`;
 }
 
 function adjustQualityForTarget(): void {
-  if (isSignaturePngSelected()) return;
+  if (isPngCompressionSelected()) return;
   const targetField = fields.querySelector<HTMLInputElement>('#targetKb');
   const quality = fields.querySelector<HTMLInputElement>('#quality');
   const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
@@ -510,7 +523,7 @@ function adjustPaletteForTarget(): void {
 }
 
 function requestEstimate(): void {
-  if (!activeTool || !['Reduce Photo File Size', 'Reduce Signature File Size', 'Convert Photo to JPG', 'Reduce PDF File Size'].includes(activeTool.name)) return;
+  if (!activeTool || !['Compress Image', 'Convert Photo to JPG', 'Reduce PDF File Size'].includes(activeTool.name)) return;
   const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
   const estimate = fields.querySelector<HTMLOutputElement>('#sizeEstimate');
   if (!file || !estimate) return;
@@ -542,7 +555,7 @@ function requestEstimate(): void {
       if (pendingPhotoDownload) {
         pendingPhotoDownload = false;
         const latestFile = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
-        if (latestFile && activeTool?.name === 'Reduce Photo File Size' && estimateCache?.key === estimateKey(latestFile, activeTool.name)) {
+        if (latestFile && isCompressImageTool(tool.name) && estimateCache?.key === estimateKey(latestFile, tool.name)) {
           submit.disabled = false;
           toolForm.requestSubmit(submit);
         } else {
@@ -552,7 +565,7 @@ function requestEstimate(): void {
         }
       }
     }
-  }, activeTool.name === 'Reduce Photo File Size' ? 500 : 250);
+  }, isCompressImageTool(activeTool.name) ? 500 : 250);
 }
 
 function formatBytes(bytes: number): string { return bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(2)} MB` : `${(bytes / 1024).toFixed(0)} KB`; }
@@ -576,7 +589,7 @@ function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOu
   const selectedQuality = outputs[0]?.quality;
   if (selectedQuality !== undefined) targetQualityBaseline = { file, quality: selectedQuality, bytes: outputs[0].blob.size };
   const selectedPalette = outputs[0]?.paletteColors;
-  if (selectedPalette !== undefined && isSignaturePngSelected()) {
+  if (selectedPalette !== undefined && isPngCompressionSelected()) {
     targetPaletteBaseline = { file, paletteColors: selectedPalette, bytes: outputs[0].blob.size };
     const palette = fields.querySelector<HTMLInputElement>('#paletteColors');
     const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
@@ -587,7 +600,7 @@ function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOu
       button.setAttribute('aria-pressed', String(button.dataset.pngColors === String(selectedPalette) && button.dataset.quality === pngEffort?.value));
     });
   }
-  if (outputs[0]?.compressionLevel !== undefined && isSignaturePngSelected()) {
+  if (outputs[0]?.compressionLevel !== undefined && isPngCompressionSelected()) {
     const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
     if (qualityValue) qualityValue.value = `Level ${outputs[0].compressionLevel}/4`;
   }
@@ -642,14 +655,14 @@ toolForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (event.submitter !== submit) return;
   if (!activeTool) return;
-  if (activeTool.name === 'Reduce Photo File Size' && estimateInFlight) {
+  if (isCompressImageTool() && estimateInFlight) {
     if (estimateTimer) { window.clearTimeout(estimateTimer); estimateTimer = 0; estimateQueued = true; }
     pendingPhotoDownload = true;
     submit.disabled = true; submit.textContent = 'Preparing download…';
     status.textContent = 'Finishing the current compression before download…';
     return;
   }
-  if (activeTool.name === 'Reduce Photo File Size' && estimateTimer) {
+  if (isCompressImageTool() && estimateTimer) {
     window.clearTimeout(estimateTimer); estimateTimer = 0; estimateVersion += 1;
   }
   const files = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement).files;
@@ -667,7 +680,7 @@ toolForm.addEventListener('submit', async (event) => {
       form: toolForm,
       report: (message) => { status.textContent = message; },
     });
-    if (['Reduce Photo File Size', 'Reduce Signature File Size'].includes(activeTool.name) && outputs.length === 1) {
+    if (isCompressImageTool() && outputs.length === 1) {
       const requestedStem = fields.querySelector<HTMLInputElement>('#outputName')?.value ?? '';
       const extension = outputs[0].name.match(/\.[^.]+$/)?.[0] ?? '.jpg';
       outputs = [{ ...outputs[0], name: `${safeDownloadStem(requestedStem)}${extension}` }];
@@ -676,7 +689,7 @@ toolForm.addEventListener('submit', async (event) => {
     status.textContent = outputs.length === 1
       ? `Done. Downloaded ${outputs[0].name}.${outputs[0].message ? ` ${outputs[0].message}` : ''}`
       : `Done. Prepared ${outputs.length} files.`;
-    submit.disabled = false; submit.textContent = ['Reduce Photo File Size', 'Reduce Signature File Size'].includes(activeTool.name) && outputs.length === 1 ? 'Download' : 'Run again';
+    submit.disabled = false; submit.textContent = isCompressImageTool() && outputs.length === 1 ? 'Download' : 'Run again';
   } catch (error) {
     status.textContent = error instanceof Error ? error.message : 'Processing failed. Please check the file and try again.';
     submit.disabled = false; submit.textContent = 'Try again';
@@ -684,7 +697,7 @@ toolForm.addEventListener('submit', async (event) => {
 });
 
 toolForm.addEventListener('keydown', (event) => {
-  if (!['Reduce Photo File Size', 'Reduce Signature File Size'].includes(activeTool?.name ?? '') || event.key !== 'Enter') return;
+  if (!isCompressImageTool() || event.key !== 'Enter') return;
   if (event.target instanceof HTMLInputElement && event.target.type !== 'file') event.preventDefault();
 });
 

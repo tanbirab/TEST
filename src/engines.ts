@@ -1,12 +1,12 @@
 import { zipSync } from 'fflate';
-import { encodeMozJpeg, encodeMozJpegFile, encodeQuantizedPngFile, optimizePng } from './image-codec';
+import { encodeMozJpeg, encodeMozJpegFile, encodeQuantizedPngFile } from './image-codec';
 
 export type EngineOutput = { name: string; blob: Blob; message?: string; quality?: number; paletteColors?: number; compressionLevel?: number };
 
 const MAX_FILE_BYTES = 100 * 1024 * 1024;
 const MAX_IMAGE_PIXELS = 40_000_000;
 const IMAGE_TOOLS = new Set([
-  'Reduce Photo File Size', 'Reduce Signature File Size', 'Change Signature Width & Height',
+  'Compress Image', 'Change Signature Width & Height',
   'Change Photo Width & Height', 'Convert Photo to JPG', 'Crop Photo',
   'Make Passport Size Photo', 'Add Name & Date on Photo',
 ]);
@@ -105,18 +105,10 @@ function mozJpegFile(file: File, quality: number, whiteBackground = false, palet
   return encodeMozJpegFile(file, quality, whiteBackground, paletteColors, dithering);
 }
 
-async function compressImage(file: File, form: HTMLFormElement, report: RunInput['report'], signature: boolean): Promise<EngineOutput> {
+async function compressImage(file: File, form: HTMLFormElement, report: RunInput['report']): Promise<EngineOutput> {
   const stem = safeStem(file.name);
   const outputFormat = value(form, 'outputFormat', 'jpg');
-  if (!signature && outputFormat === 'png') {
-    report('Optimizing a lossless PNG in your browser…');
-    const canvas = await imageCanvas(file);
-    const png = await new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error('PNG export failed.')), 'image/png'));
-    const optimized = await optimizePng(await png.arrayBuffer());
-    return output(`${stem}-compressed.png`, optimized, 'image/png');
-  }
-  const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
-  if (signature && isPng) {
+  if (outputFormat === 'png') {
     const targetKb = Number(value(form, 'targetKb', '0'));
     const targetBytes = targetKb > 0 ? targetKb * 1024 : 0;
     const requestedColors = Math.max(8, Math.min(256, Math.round(Number(value(form, 'paletteColors', '256')) / 8) * 8));
@@ -153,10 +145,10 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
       ? `Target was too small; best result is ${(best.byteLength / 1024).toFixed(0)} KB.`
       : undefined;
     if (message) report(message);
-    return { ...output(`${stem}-optimized.png`, best, 'image/png'), message, paletteColors: selectedColors, compressionLevel };
+    return { ...output(`${stem}-compressed.png`, best, 'image/png'), message, paletteColors: selectedColors, compressionLevel };
   }
 
-  const whiteBackground = signature;
+  const whiteBackground = true;
   const targetKb = Number(value(form, 'targetKb', '0'));
   const paletteColors = Number(value(form, 'paletteColors', '256'));
   const dithering = Number(value(form, 'dithering', '0.48'));
@@ -198,7 +190,7 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
     best = chosen.bytes;
     selectedQuality = chosen.quality;
   }
-  if (best.byteLength > file.size && !signature) throw new Error('This image is already smaller than the encoded result. Try a lower quality or a different output format.');
+  if (best.byteLength > file.size) throw new Error('This image is already smaller than the encoded result. Try a lower quality or a different output format.');
   const message = targetKb > 0 && best.byteLength > targetKb * 1024
     ? `Target was too small; best result is ${(best.byteLength / 1024).toFixed(0)} KB.`
     : undefined;
@@ -223,8 +215,7 @@ async function imageTask(input: RunInput): Promise<EngineOutput[]> {
   if (tool === 'Sign PDF') return pdfTask(input);
   ensureFiles(files, 'image', ['Make PDF from Photos'].includes(tool));
   const first = files[0];
-  if (tool === 'Reduce Photo File Size') return [await compressImage(first, form, report, false)];
-  if (tool === 'Reduce Signature File Size') return [await compressImage(first, form, report, true)];
+  if (tool === 'Compress Image') return [await compressImage(first, form, report)];
   if (tool === 'Convert Photo to JPG') {
     report('Converting the image with the MozJPEG encoder…');
     return [output(`${safeStem(first.name)}.jpg`, await mozJpegFile(first, Number(value(form, 'quality', '90')) / 100), 'image/jpeg')];
