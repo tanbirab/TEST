@@ -430,3 +430,53 @@ body{
 @media(max-width:650px){.tool-page[data-tool="compress-image"] .primary-image-controls{grid-template-columns:minmax(0,1fr)}}
 .photo-compressor .size-estimate[hidden]{display:none}
 @media(max-width:650px){.tool-page[data-tool="compress-image"] .compression-presets.compact-presets button{min-height:40px;padding:6px 3px;border-radius:9px;font-size:11px}}
+
+/* Keep the mobile compressor reading order aligned with the preview-first workflow. */
+.photo-compressor{grid-template-columns:minmax(245px,300px) minmax(0,1fr);grid-template-rows:auto 1fr;grid-template-areas:"upload preview" "settings preview"}
+.compress-upload{grid-area:upload;display:grid;align-content:start;gap:9px;min-width:0;padding:13px;border-right:1px solid #e5ddd1}
+.compress-preview-column{grid-area:preview;grid-row:1 / span 2;grid-column:2}
+.compress-settings{grid-area:settings;display:grid;align-content:start;gap:9px;min-width:0;padding:13px;border-right:1px solid #e5ddd1}
+@media(max-width:1050px){
+  .photo-compressor{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;grid-template-areas:"upload" "preview" "settings"}
+  .compress-upload{padding:10px 10px 0;border:0}
+  .compress-preview-column{grid-row:auto;grid-column:auto;grid-template-rows:minmax(220px,auto) auto}
+  .compress-settings{padding:10px;border:0;border-top:1px solid #e5ddd1}
+}
+@media(max-width:650px){
+  .tool-page[data-tool="compress-image"] .tool-card{padding:12px 10px 14px}
+  .photo-compressor{border-radius:12px}
+  .compress-upload{gap:2px;padding:9px 9px 0}
+  .photo-dropzone{min-height:62px;padding:8px 10px}
+  .photo-upload-copy strong{font-size:12px}
+  .photo-upload-copy small{font-size:10px}
+  .photo-file-row{min-height:0;padding:7px 0;border:0;border-radius:0;gap:8px}
+  .photo-file-mark{display:none}
+  .photo-file-meta strong{font-size:11px}
+  .photo-file-meta small{font-size:10px}
+  .photo-remove{min-block-size:36px;padding:6px;font-size:11px}
+  .compress-preview-column{grid-template-rows:minmax(180px,auto) auto}
+  .photo-compressor .file-preview,.photo-preview-empty,.photo-compressor .image-comparison{min-height:180px}
+  .compression-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+  .compression-stats>div{min-height:54px;padding:6px 8px;border-radius:0}
+  .compression-stats small{font-size:9px}
+  .compression-stats strong{font-size:14px}
+  .compress-settings{gap:9px;padding:10px}
+  .target-format-row{gap:10px}
+  .target-compact-field>label,.format-compact-field>label{font-size:10px}
+  .target-compact-field .target-size-input,.compact-format{min-height:38px}
+  .target-compact-field .target-size-input input{min-height:36px}
+  .compression-presets.compact-presets button{min-height:40px;font-size:12px}
+  .tool-page[data-tool="compress-image"] .primary-image-controls{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;padding:0;border:0}
+  .tool-page[data-tool="compress-image"] .primary-image-controls .compact-range label{min-height:20px;font-size:11px}
+  .tool-page[data-tool="compress-image"] .primary-image-controls .compact-range input[type="range"]{height:32px}
+  .tool-page[data-tool="compress-image"] .primary-image-controls .compact-range small{min-height:2.5em}
+  .tool-page[data-tool="compress-image"] .photo-download-row{grid-template-columns:minmax(0,1fr);gap:8px}
+  .tool-page[data-tool="compress-image"] .compress-settings .output-name-field input{min-height:40px}
+  .tool-page[data-tool="compress-image"] .compress-settings .dialog-submit{min-height:42px;font-size:13px}
+}
+@media(max-width:650px) and (pointer:coarse){
+  .photo-remove,.compression-presets.compact-presets button,.compact-format,
+  .target-compact-field .target-size-input input,
+  .tool-page[data-tool="compress-image"] .primary-image-controls .compact-range input[type="range"],
+  .tool-page[data-tool="compress-image"] .compress-settings .dialog-submit{min-block-size:44px}
+}
