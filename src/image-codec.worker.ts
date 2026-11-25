@@ -4,8 +4,9 @@ import { optimise } from '@jsquash/oxipng';
 type ImageJob =
   | { id: number; kind: 'jpeg'; width: number; height: number; pixels: Uint8ClampedArray; quality: number }
   | { id: number; kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number; dithering: number }
+  | { id: number; kind: 'png-file'; key: string; file: Blob; paletteColors: number; dithering: number; level: number }
   | { id: number; kind: 'release-source'; key: string }
-  | { id: number; kind: 'png'; bytes: ArrayBuffer };
+  | { id: number; kind: 'png'; bytes: ArrayBuffer; level: number };
 
 const imageCache = new Map<string, ImageData>();
 let jobQueue: Promise<void> = Promise.resolve();
@@ -19,7 +20,7 @@ self.addEventListener('message', (event: MessageEvent<ImageJob>) => {
   jobQueue = jobQueue.then(async () => {
     try {
       let imageData: ImageData | undefined;
-      if (job.kind === 'jpeg-file') {
+      if (job.kind === 'jpeg-file' || job.kind === 'png-file') {
         imageData = imageCache.get(job.key);
         if (!imageData) {
           const bitmap = await createImageBitmap(job.file);
@@ -27,17 +28,19 @@ self.addEventListener('message', (event: MessageEvent<ImageJob>) => {
             const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
             const context = canvas.getContext('2d', { willReadFrequently: true });
             if (!context) throw new Error('Could not prepare the image preview.');
-            if (job.whiteBackground) { context.fillStyle = '#fff'; context.fillRect(0, 0, bitmap.width, bitmap.height); }
+            if (job.kind === 'jpeg-file' && job.whiteBackground) { context.fillStyle = '#fff'; context.fillRect(0, 0, bitmap.width, bitmap.height); }
             context.drawImage(bitmap, 0, 0);
             imageData = context.getImageData(0, 0, bitmap.width, bitmap.height);
             imageCache.set(job.key, imageData);
             while (imageCache.size > 1) imageCache.delete(imageCache.keys().next().value as string);
           } finally { bitmap.close(); }
         }
-        if (job.paletteColors < 256) imageData = quantize(imageData, job.paletteColors, job.dithering);
+        if (job.kind === 'png-file' || job.paletteColors < 256) imageData = quantize(imageData, job.paletteColors, job.dithering);
       }
       const result = job.kind === 'png'
-        ? await optimise(job.bytes, { level: 3, optimiseAlpha: true })
+        ? await optimise(job.bytes, { level: job.level, optimiseAlpha: true })
+        : job.kind === 'png-file'
+          ? await encodePng(imageData!, job.level)
         : job.kind === 'jpeg-file'
           ? await encode(imageData!, { quality: job.quality })
           : await encode(new ImageData(new Uint8ClampedArray(job.pixels), job.width, job.height), { quality: job.quality });
@@ -47,6 +50,15 @@ self.addEventListener('message', (event: MessageEvent<ImageJob>) => {
     }
   });
 });
+
+async function encodePng(imageData: ImageData, level: number): Promise<ArrayBuffer> {
+  const canvas = new OffscreenCanvas(imageData.width, imageData.height);
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Could not prepare the transparent PNG.');
+  context.putImageData(imageData, 0, 0);
+  const encoded = await canvas.convertToBlob({ type: 'image/png' });
+  return optimise(await encoded.arrayBuffer(), { level, optimiseAlpha: true });
+}
 
 type Color = { r: number; g: number; b: number; count: number; sumR: number; sumG: number; sumB: number };
 type ColorBox = { colors: Color[]; ranges: [number, number, number]; weight: number; score: number };
@@ -60,6 +72,7 @@ function quantize(source: ImageData, maxColors: number, dithering: number): Imag
   const histogram = new Map<number, Color>();
   for (let pixel = 0; pixel < total; pixel += stride) {
     const i = pixel * 4;
+    if (data[i + 3] === 0) continue;
     const r = data[i], g = data[i + 1], b = data[i + 2];
     const key = ((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3);
     const count = Math.min(stride, total - pixel);
@@ -72,6 +85,7 @@ function quantize(source: ImageData, maxColors: number, dithering: number): Imag
   }
 
   const colors = [...histogram.values()];
+  if (colors.length === 0) return source;
   if (colors.length <= maxColors) return source;
   for (const color of colors) {
     color.r = color.sumR / color.count;
@@ -118,6 +132,11 @@ function quantize(source: ImageData, maxColors: number, dithering: number): Imag
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const i = (y * width + x) * 4, e = (x + 1) * 3;
+      if (data[i + 3] === 0) {
+        output[i] = data[i]; output[i + 1] = data[i + 1]; output[i + 2] = data[i + 2]; output[i + 3] = 0;
+        current[e] = current[e + 1] = current[e + 2] = 0;
+        continue;
+      }
       const r = clampColor(data[i] + current[e]), g = clampColor(data[i + 1] + current[e + 1]), b = clampColor(data[i + 2] + current[e + 2]);
       const color = palette[lookup[((r >> 3) << 10) | ((g >> 3) << 5) | (b >> 3)]];
       output[i] = color.r; output[i + 1] = color.g; output[i + 2] = color.b; output[i + 3] = data[i + 3];

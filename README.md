@@ -68,7 +68,7 @@ These engines are installed and used by the corresponding workflows. Their outpu
 | --- | --- |
 | Reduce Photo File Size; Convert Photo to JPG | MozJPEG WebAssembly encoder. Compression searches quality levels to approach an optional target; only JPEG output is produced. Browser-decodable formats only; HEIC/HEIF is not included. |
 | Reduce PDF File Size | A separate Ghostscript 10.08.0 WebAssembly component uses `pdfwrite` to recompress the document and downsample images at a user-selected resolution/quality. This is lossy and may change document internals, forms, annotations, or metadata. Files with digital signatures are rejected; files may not shrink if already optimized. |
-| Reduce Signature File Size | OxiPNG losslessly optimizes PNG and preserves transparency; other supported images are encoded as JPEG on white. |
+| Reduce Signature File Size | OxiPNG optimizes PNG and preserves transparency. At the full-color setting it stays lossless; lowering the palette quantizes RGB while retaining alpha, with adjustable dithering and best-effort target-size search. PNG compression effort selects OxiPNG levels 1–4. Other supported images are encoded as JPEG on white. |
 | Change Signature Width & Height; Change Photo Width & Height | Pica resize to the requested pixel dimensions; output is PNG. |
 | Make PDF from Photos; Merge PDF Files; Split PDF; Delete PDF Pages; Sign PDF placement; Put Many Pages on One Page | pdf-lib creates/edits pages and embeds signature images. Split exports selected pages in a ZIP. “Sign PDF” places an image and does not create a cryptographic PDF signature. |
 | Crop Photo | Cropper.js selects the area; Canvas exports it at the selected source-pixel dimensions. |

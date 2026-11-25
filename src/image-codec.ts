@@ -2,8 +2,9 @@ type ImageReply = { id: number; result?: ArrayBuffer; error?: string };
 type ImageJobPayload =
   | { kind: 'jpeg'; width: number; height: number; pixels: Uint8ClampedArray; quality: number }
   | { kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number; dithering: number }
+  | { kind: 'png-file'; key: string; file: Blob; paletteColors: number; dithering: number; level: number }
   | { kind: 'release-source'; key: string }
-  | { kind: 'png'; bytes: ArrayBuffer };
+  | { kind: 'png'; bytes: ArrayBuffer; level: number };
 
 let worker: Worker | undefined;
 let nextId = 0;
@@ -58,8 +59,14 @@ export function releaseMozJpegFile(file: Blob): void {
   const key = getSourceId(file);
   worker.postMessage({ id: ++nextId, kind: 'release-source', key: `${key}:white` });
   worker.postMessage({ id: ++nextId, kind: 'release-source', key: `${key}:alpha` });
+  worker.postMessage({ id: ++nextId, kind: 'release-source', key: `${key}:png` });
 }
 
-export function optimizePng(bytes: ArrayBuffer): Promise<ArrayBuffer> {
-  return send({ kind: 'png', bytes }, [bytes]);
+export function encodeQuantizedPngFile(file: Blob, paletteColors: number, dithering: number, level = 3): Promise<ArrayBuffer> {
+  const key = getSourceId(file);
+  return send({ kind: 'png-file', key: `${key}:png`, file, paletteColors, dithering, level }, []);
+}
+
+export function optimizePng(bytes: ArrayBuffer, level = 3): Promise<ArrayBuffer> {
+  return send({ kind: 'png', bytes, level }, [bytes]);
 }

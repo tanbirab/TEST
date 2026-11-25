@@ -1,7 +1,7 @@
 import { zipSync } from 'fflate';
-import { encodeMozJpeg, encodeMozJpegFile, optimizePng } from './image-codec';
+import { encodeMozJpeg, encodeMozJpegFile, encodeQuantizedPngFile, optimizePng } from './image-codec';
 
-export type EngineOutput = { name: string; blob: Blob; message?: string; quality?: number };
+export type EngineOutput = { name: string; blob: Blob; message?: string; quality?: number; paletteColors?: number; compressionLevel?: number };
 
 const MAX_FILE_BYTES = 100 * 1024 * 1024;
 const MAX_IMAGE_PIXELS = 40_000_000;
@@ -117,9 +117,43 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
   }
   const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
   if (signature && isPng) {
-    report('Optimizing the PNG without removing transparency…');
-    const optimized = await optimizePng(await file.arrayBuffer());
-    return output(`${stem}-optimized.png`, optimized, 'image/png');
+    const targetKb = Number(value(form, 'targetKb', '0'));
+    const targetBytes = targetKb > 0 ? targetKb * 1024 : 0;
+    const requestedColors = Math.max(8, Math.min(256, Math.round(Number(value(form, 'paletteColors', '256')) / 8) * 8));
+    const dithering = Math.max(0, Math.min(1, Number(value(form, 'dithering', '0.48'))));
+    const compressionLevel = Math.max(1, Math.min(4, 1 + Math.round((Number(value(form, 'quality', '72')) - 15) / 27)));
+    report(targetBytes ? 'Finding a PNG palette close to your target…' : requestedColors === 256
+      ? 'Optimizing the PNG with up to 256 colors and preserving transparency…'
+      : `Reducing the PNG palette to ${requestedColors} colors…`);
+
+    let best = await encodeQuantizedPngFile(file, requestedColors, dithering, compressionLevel);
+    let selectedColors = requestedColors;
+    let smallest = { bytes: best, colors: requestedColors };
+    let fit: { bytes: ArrayBuffer; colors: number } | undefined = targetBytes && best.byteLength <= targetBytes
+      ? { bytes: best, colors: requestedColors }
+      : undefined;
+    if (targetBytes && !fit && requestedColors > 8) {
+      let low = 8;
+      let high = requestedColors - 8;
+      for (let attempt = 0; attempt < 5 && low <= high; attempt++) {
+        const midpoint = Math.round(((low + high) / 2) / 8) * 8;
+        const colors = Math.max(low, Math.min(high, midpoint));
+        const candidateColors = Math.max(8, Math.min(256, Math.round(colors / 8) * 8));
+        const bytes = await encodeQuantizedPngFile(file, candidateColors, dithering, compressionLevel);
+        if (bytes.byteLength < smallest.bytes.byteLength) smallest = { bytes, colors: candidateColors };
+        if (bytes.byteLength <= targetBytes) {
+          if (!fit || candidateColors > fit.colors) fit = { bytes, colors: candidateColors };
+          low = candidateColors + 8;
+        } else high = candidateColors - 8;
+      }
+    }
+    if (fit) { best = fit.bytes; selectedColors = fit.colors; }
+    else if (targetBytes && best.byteLength > targetBytes) { best = smallest.bytes; selectedColors = smallest.colors; }
+    const message = targetBytes && best.byteLength > targetBytes
+      ? `Target was too small; best result is ${(best.byteLength / 1024).toFixed(0)} KB.`
+      : undefined;
+    if (message) report(message);
+    return { ...output(`${stem}-optimized.png`, best, 'image/png'), message, paletteColors: selectedColors, compressionLevel };
   }
 
   const whiteBackground = signature;
