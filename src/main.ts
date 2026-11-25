@@ -121,9 +121,9 @@ function workflowMarkup(tool: Tool): string {
     return `<div class="photo-compressor"><div class="compress-controls">
       <label class="photo-dropzone" for="sourceFiles"><span class="photo-upload-icon" aria-hidden="true">↑</span><span class="photo-upload-copy"><strong>Drop, paste or browse</strong><small>JPG, PNG, WebP · up to 100 MB</small></span><input id="sourceFiles" name="sourceFiles" type="file" accept="image/*" required></label>
       <div class="photo-file-row" id="photoFileRow" hidden><span class="photo-file-mark" aria-hidden="true"></span><span class="photo-file-meta"><strong id="photoFileName"></strong><small id="photoFileDetails"></small></span><button class="photo-remove" id="photoRemove" type="button">Remove</button></div>
-      <div class="target-format-row"><div class="engine-field target-compact-field"><label for="targetKb">Target size</label><div class="target-size-input"><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 100" aria-describedby="targetSizeHelp sizeEstimate"><span aria-hidden="true">KB</span></div></div><div class="engine-field format-compact-field"><label for="outputFormat">Format</label>${formatSelector}</div></div>
-      <small id="targetSizeHelp" class="target-help">Optional · compression adjusts to your target.</small>
-      <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose an image to see the estimated compressed size.</output><p id="targetReduction" class="target-reduction" aria-live="polite">Your target updates quality or palette automatically.</p>
+      <div class="target-format-row"><div class="engine-field target-compact-field"><label for="targetKb">Target size <span>KB · optional</span></label><div class="target-size-input"><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 100" aria-describedby="targetSizeHelp sizeEstimate"><span aria-hidden="true">KB</span></div></div><div class="engine-field format-compact-field"><label for="outputFormat">Format</label>${formatSelector}</div></div>
+      <small id="targetSizeHelp" class="target-help">Set the file size you need.</small>
+      <output id="sizeEstimate" class="size-estimate" aria-live="polite"></output><p id="targetReduction" class="target-reduction" aria-live="polite">Your target updates quality or palette automatically.</p>
       <div class="compression-presets compact-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" data-png-colors="64" aria-pressed="false">Small</button><button type="button" data-quality="72" data-png-colors="128" aria-pressed="true">Balanced</button><button type="button" data-quality="90" data-png-colors="256" aria-pressed="false">Best</button></div>
       <div class="engine-field compact-range"><label for="quality"><span id="qualityLabel">Quality</span><output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"></div>
       <div class="engine-field compact-range"><label for="scalePercent"><span>Image size</span><output id="scaleValue" for="scalePercent">100%</output></label><input id="scalePercent" name="scalePercent" type="range" min="10" max="100" value="100"><small>Reduce dimensions for a smaller file.</small></div>
@@ -300,7 +300,7 @@ function clearPhotoSelection(): void {
   const imageKind = 'image';
   fields.querySelector<HTMLDivElement>('#filePreview')!.innerHTML = `<div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a ${imageKind} to see the original and compressed versions.</small></div>`;
   toolPage.classList.remove('has-image');
-  fields.querySelector<HTMLOutputElement>('#sizeEstimate')!.value = `Choose a ${imageKind} to start.`;
+  fields.querySelector<HTMLOutputElement>('#sizeEstimate')!.value = '';
   fields.querySelector<HTMLElement>('#originalSize')!.textContent = '—';
   fields.querySelector<HTMLElement>('#compressedSize')!.textContent = '—';
   fields.querySelector<HTMLElement>('#savedPercent')!.textContent = '—';

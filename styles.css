@@ -405,3 +405,16 @@ body{
 .tool-page[data-tool="compress-image"] .compression-presets button{min-height:46px;padding:5px;border-radius:8px;gap:1px}
 .tool-page[data-tool="compress-image"] .compression-presets strong{font-size:12px}
 .tool-page[data-tool="compress-image"] .compression-presets span{font-size:9px}
+
+/* Keep the compact compression controls visually unified with the rest of the card. */
+.tool-page[data-tool="compress-image"] .target-compact-field .target-size-input{min-height:46px;border:1px solid #d8d1c5;border-radius:10px;background:#fff;box-shadow:none}
+.tool-page[data-tool="compress-image"] .target-compact-field .target-size-input:focus-within{border-color:#d14836;box-shadow:0 0 0 3px #d1483618}
+.tool-page[data-tool="compress-image"] .target-compact-field .target-size-input input{min-height:44px;padding:8px 10px;border:0;border-radius:0;outline:0;background:transparent;box-shadow:none;color:#242320;font:500 14px 'DM Sans',sans-serif}
+.tool-page[data-tool="compress-image"] .target-compact-field .target-size-input input:focus-visible{outline:0;box-shadow:none}
+.tool-page[data-tool="compress-image"] .target-compact-field .target-size-input>span{padding:0 11px;color:#77736c;font-size:11px;font-weight:600}
+.tool-page[data-tool="compress-image"] .compact-format{min-height:46px;padding:0 12px;border-color:#d8d1c5;border-radius:10px;background-color:#fff;font-size:13px}
+.tool-page[data-tool="compress-image"] .compression-presets.compact-presets button{min-height:43px;padding:7px 5px;border:1px solid #ded8cc;border-radius:10px;background:#fff;color:#4c4840;font:600 12px 'DM Sans',sans-serif;box-shadow:0 1px 2px #3127180a;transition:background-color .15s,border-color .15s,color .15s,transform .15s,box-shadow .15s}
+.tool-page[data-tool="compress-image"] .compression-presets.compact-presets button:hover{border-color:#d14836;background:#fff8f6;transform:translateY(-1px)}
+.tool-page[data-tool="compress-image"] .compression-presets.compact-presets button[aria-pressed="true"]{border-color:#d14836;background:#d14836;color:#fff;box-shadow:0 3px 8px #d148362b}
+.tool-page[data-tool="compress-image"] .compression-presets.compact-presets button:focus-visible{outline:3px solid #d1483655;outline-offset:2px}
+@media(max-width:650px){.tool-page[data-tool="compress-image"] .compression-presets.compact-presets button{min-height:40px;padding:6px 3px;border-radius:9px;font-size:11px}}
