@@ -372,3 +372,30 @@ body{
 .license-table-wrap th,.license-table-wrap td{padding:10px;border-bottom:1px solid #dce5f1;vertical-align:top}
 .license-table-wrap a,.policy-links a{color:#b8392a;text-decoration:underline;text-underline-offset:2px}
 .policy-links{margin-top:24px}
+
+/* Give signature reduction the same workspace layout as photo reduction. */
+.tool-page[data-tool="reduce-signature-file-size"]{max-width:980px;min-height:0;padding:20px clamp(18px,3vw,34px) 42px}
+.tool-page[data-tool="reduce-signature-file-size"] .tool-card{padding:20px clamp(16px,2.5vw,28px) 24px;overflow:visible}
+.tool-page[data-tool="reduce-signature-file-size"] .tool-page-heading{margin-bottom:16px}
+.tool-page[data-tool="reduce-signature-file-size"] .tool-back{margin:0 0 8px}
+.tool-page[data-tool="reduce-signature-file-size"] .photo-compression-form{display:grid;grid-template-columns:minmax(270px,.92fr) minmax(0,1.48fr);grid-template-areas:"upload preview" "file preview" "fine summary" "submit submit";align-items:start;gap:12px 22px}
+.tool-page[data-tool="reduce-signature-file-size"]:not(.has-image) .photo-compression-form{grid-template-areas:"upload preview" "fine preview" "submit submit";grid-template-rows:minmax(260px,auto) minmax(260px,auto) auto}
+.tool-page[data-tool="reduce-signature-file-size"]:not(.has-image) .compression-summary{display:none}
+.tool-page[data-tool="reduce-signature-file-size"] .photo-workflow-fields{display:contents}
+.tool-page[data-tool="reduce-signature-file-size"] .tool-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.tool-page[data-tool="reduce-signature-file-size"] .photo-download-row{grid-area:submit;display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.8fr);align-items:end;gap:12px}
+.tool-page[data-tool="reduce-signature-file-size"]:not(.has-image) .output-name-field{display:none}
+.tool-page[data-tool="reduce-signature-file-size"]:not(.has-image) .photo-download-row{grid-template-columns:1fr}
+.tool-page[data-tool="reduce-signature-file-size"] .photo-download-row .dialog-submit{grid-area:auto;align-self:end;min-height:40px;margin:0;padding:10px 12px}
+.tool-page[data-tool="reduce-signature-file-size"] .output-name-control input{min-width:0;min-height:36px;border-radius:9px}
+.tool-page[data-tool="reduce-signature-file-size"] .compression-levels{padding:13px;border:1px solid #e5e0d6;border-radius:14px;background:#faf9f6}
+.tool-page[data-tool="reduce-signature-file-size"] .compression-presets{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tool-page[data-tool="reduce-signature-file-size"] .compression-presets button{min-height:60px;padding:7px;border-radius:10px;display:grid;justify-items:center;align-content:center;text-align:center;gap:4px}
+.tool-page[data-tool="reduce-signature-file-size"] .compression-presets button::before{display:none}
+.tool-page[data-tool="reduce-signature-file-size"] .compression-presets strong{font-size:13px}
+.tool-page[data-tool="reduce-signature-file-size"] .compression-presets span{font-size:10px}
+.tool-page[data-tool="reduce-signature-file-size"] .tool-status{margin:0;min-height:0;padding:6px 0;border:0;background:transparent;color:#6a655d;text-align:center;font-size:12px}
+.tool-page[data-tool="reduce-signature-file-size"] .dialog-submit{margin-top:2px;padding:13px;border-radius:13px;font-size:15px;box-shadow:0 6px 18px #d1483630}
+.tool-page[data-tool="reduce-signature-file-size"] .dialog-submit:disabled{box-shadow:none}
+@media(max-width:1050px){.tool-page[data-tool="reduce-signature-file-size"] .photo-compression-form{display:flex;flex-direction:column;gap:12px}.tool-page[data-tool="reduce-signature-file-size"] .photo-workflow-fields{display:block;width:100%;min-width:0}.tool-page[data-tool="reduce-signature-file-size"] .photo-compressor{display:flex;flex-direction:column;width:100%;min-width:0;gap:12px}.tool-page[data-tool="reduce-signature-file-size"] .photo-dropzone,.tool-page[data-tool="reduce-signature-file-size"] .photo-file-row,.tool-page[data-tool="reduce-signature-file-size"] .file-preview,.tool-page[data-tool="reduce-signature-file-size"] .compression-summary,.tool-page[data-tool="reduce-signature-file-size"] .compression-stats,.tool-page[data-tool="reduce-signature-file-size"] .compression-levels,.tool-page[data-tool="reduce-signature-file-size"] .photo-fine-tune,.tool-page[data-tool="reduce-signature-file-size"] .photo-download-row,.tool-page[data-tool="reduce-signature-file-size"] .dialog-submit{grid-area:auto;grid-row:auto}.tool-page[data-tool="reduce-signature-file-size"] .compression-summary{gap:8px}.tool-page[data-tool="reduce-signature-file-size"] .photo-fine-tune-body{grid-template-columns:repeat(2,minmax(0,1fr))}.tool-page[data-tool="reduce-signature-file-size"]:not(.has-image) .photo-preview-empty{min-height:220px}}
+@media(max-width:650px){.tool-page[data-tool="reduce-signature-file-size"]{padding:18px 10px 28px}.tool-page[data-tool="reduce-signature-file-size"] .tool-card{padding:14px 12px 18px}.tool-page[data-tool="reduce-signature-file-size"] .photo-fine-tune-body{grid-template-columns:minmax(0,1fr)}.tool-page[data-tool="reduce-signature-file-size"] .photo-download-row{grid-template-columns:minmax(0,1fr)}.tool-page[data-tool="reduce-signature-file-size"] .tool-page-heading{gap:10px}.tool-page[data-tool="reduce-signature-file-size"] .tool-page-heading>div:last-child{flex:1;min-width:0}.tool-page[data-tool="reduce-signature-file-size"] .tool-page-heading h1{margin:0 0 4px;font-size:clamp(14px,5vw,21px);line-height:1.1;letter-spacing:-.6px;white-space:nowrap}}
