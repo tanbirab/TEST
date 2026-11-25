@@ -125,9 +125,8 @@ function workflowMarkup(tool: Tool): string {
       <small id="targetSizeHelp" class="target-help">Set the file size you need.</small>
       <output id="sizeEstimate" class="size-estimate" aria-live="polite"></output><p id="targetReduction" class="target-reduction" aria-live="polite">Your target updates quality or palette automatically.</p>
       <div class="compression-presets compact-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" data-png-colors="64" aria-pressed="false">Small</button><button type="button" data-quality="72" data-png-colors="128" aria-pressed="true">Balanced</button><button type="button" data-quality="90" data-png-colors="256" aria-pressed="false">Best</button></div>
-      <div class="engine-field compact-range"><label for="quality"><span id="qualityLabel">Quality</span><output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"></div>
-      <div class="engine-field compact-range"><label for="scalePercent"><span>Image size</span><output id="scaleValue" for="scalePercent">100%</output></label><input id="scalePercent" name="scalePercent" type="range" min="10" max="100" value="100"><small>Reduce dimensions for a smaller file.</small></div>
-      <details class="photo-fine-tune"><summary>More image settings</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
+      <div class="primary-image-controls"><div class="engine-field compact-range"><label for="quality"><span id="qualityLabel">Quality</span><output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"></div><div class="engine-field compact-range"><label for="paletteColors"><span>Color palette</span><output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div></div>
+      <details class="photo-fine-tune"><summary>More image settings</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
       <div class="photo-download-row"><div class="engine-field output-name-field"><label for="outputName">File name</label><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed"></div></div>
     </div><div class="compress-preview-column"><div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your before and after preview appears here.</strong></div></div><div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div></div></div>`;
   }
@@ -191,14 +190,9 @@ function openTool(tool: Tool, navigate = true): void {
       if (input.name === 'quality' && out) {
         const pngMode = isPngCompressionSelected();
         const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
-        if (qualityLabel) qualityLabel.textContent = pngMode ? 'PNG compression effort' : 'JPEG quality';
+        if (qualityLabel) qualityLabel.textContent = 'Quality';
         out.value = pngMode ? `Level ${pngCompressionLevel(Number(input.value))}/4` : `${input.value}%`;
         input.setAttribute('aria-valuetext', pngMode ? `Compression level ${pngCompressionLevel(Number(input.value))} of 4` : `${input.value} percent quality`);
-      }
-      if (input.name === 'scalePercent') {
-        const scaleValue = fields.querySelector<HTMLOutputElement>('#scaleValue');
-        if (scaleValue) scaleValue.value = `${input.value}%`;
-        input.setAttribute('aria-valuetext', `${input.value} percent of original dimensions`);
       }
       if (input.name === 'quality') {
         const paletteValue = (toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null)?.value;
@@ -248,7 +242,7 @@ function openTool(tool: Tool, navigate = true): void {
     if (palette) palette.disabled = false;
     if (dithering) dithering.disabled = !isPng && palette?.value === '256';
     fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = false; });
-    if (qualityLabel) qualityLabel.textContent = isPng ? 'PNG compression effort' : 'JPEG quality';
+    if (qualityLabel) qualityLabel.textContent = 'Quality';
     if (qualityValue && quality) qualityValue.value = isPng ? `Level ${pngCompressionLevel(Number(quality.value))}/4` : `${quality.value}%`;
     const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
     if (paletteValue && palette) paletteValue.value = isPng ? `${palette.value} colors` : palette.value === '256' ? 'Full color' : `${palette.value} colors`;
@@ -314,7 +308,7 @@ function clearPhotoSelection(): void {
   fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = false; });
   const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
   const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
-  if (qualityLabel) qualityLabel.textContent = 'JPEG quality';
+  if (qualityLabel) qualityLabel.textContent = 'Quality';
   if (qualityValue && quality) qualityValue.value = `${quality.value}%`;
   submit.disabled = true; submit.textContent = 'Choose an image first';
 }
@@ -386,7 +380,7 @@ async function showSelectedFiles(files: File[]): Promise<void> {
     quality.disabled = false;
     const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
     const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
-    if (qualityLabel) qualityLabel.textContent = pngMode ? 'PNG compression effort' : 'JPEG quality';
+    if (qualityLabel) qualityLabel.textContent = 'Quality';
     if (qualityValue) qualityValue.value = pngMode ? `Level ${pngCompressionLevel(Number(quality.value))}/4` : `${quality.value}%`;
     for (const name of ['targetKb', 'paletteColors', 'dithering']) {
       const control = toolForm.elements.namedItem(name) as HTMLInputElement | null;

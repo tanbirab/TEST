@@ -417,4 +417,10 @@ body{
 .tool-page[data-tool="compress-image"] .compression-presets.compact-presets button:hover{border-color:#d14836;background:#fff8f6;transform:translateY(-1px)}
 .tool-page[data-tool="compress-image"] .compression-presets.compact-presets button[aria-pressed="true"]{border-color:#d14836;background:#d14836;color:#fff;box-shadow:0 3px 8px #d148362b}
 .tool-page[data-tool="compress-image"] .compression-presets.compact-presets button:focus-visible{outline:3px solid #d1483655;outline-offset:2px}
+.tool-page[data-tool="compress-image"] .primary-image-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:0;padding:9px 0 2px;border-top:1px solid #e5ddd1}
+.tool-page[data-tool="compress-image"] .primary-image-controls .compact-range{gap:5px}
+.tool-page[data-tool="compress-image"] .primary-image-controls .compact-range label{font-size:11px;font-weight:650;color:#37332d}
+.tool-page[data-tool="compress-image"] .primary-image-controls .compact-range output{color:#d14836;font-size:11px;font-weight:700}
+.tool-page[data-tool="compress-image"] .primary-image-controls .compact-range input[type="range"]{width:100%;height:24px;margin:0;accent-color:#d14836}
+.tool-page[data-tool="compress-image"] .primary-image-controls .compact-range small{min-height:2.5em;font-size:10px;line-height:1.3}
 @media(max-width:650px){.tool-page[data-tool="compress-image"] .compression-presets.compact-presets button{min-height:40px;padding:6px 3px;border-radius:9px;font-size:11px}}
