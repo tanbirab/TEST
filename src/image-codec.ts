@@ -1,8 +1,8 @@
 type ImageReply = { id: number; result?: ArrayBuffer; error?: string };
 type ImageJobPayload =
   | { kind: 'jpeg'; width: number; height: number; pixels: Uint8ClampedArray; quality: number }
-  | { kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number; dithering: number }
-  | { kind: 'png-file'; key: string; file: Blob; paletteColors: number; dithering: number; level: number }
+  | { kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number; dithering: number; scale: number }
+  | { kind: 'png-file'; key: string; file: Blob; paletteColors: number; dithering: number; level: number; scale: number }
   | { kind: 'release-source'; key: string }
   | { kind: 'png'; bytes: ArrayBuffer; level: number };
 
@@ -43,9 +43,9 @@ export function encodeMozJpeg(image: ImageData, quality: number): Promise<ArrayB
   return send({ kind: 'jpeg', width: image.width, height: image.height, pixels, quality: Math.round(quality * 100) }, [pixels.buffer]);
 }
 
-export function encodeMozJpegFile(file: Blob, quality: number, whiteBackground = false, paletteColors = 256, dithering = 0.48): Promise<ArrayBuffer> {
+export function encodeMozJpegFile(file: Blob, quality: number, whiteBackground = false, paletteColors = 256, dithering = 0.48, scale = 100): Promise<ArrayBuffer> {
   const key = getSourceId(file);
-  return send({ kind: 'jpeg-file', key: `${key}:${whiteBackground ? 'white' : 'alpha'}`, file, quality: Math.round(quality * 100), whiteBackground, paletteColors, dithering }, []);
+  return send({ kind: 'jpeg-file', key: `${key}:${whiteBackground ? 'white' : 'alpha'}:${scale}`, file, quality: Math.round(quality * 100), whiteBackground, paletteColors, dithering, scale }, []);
 }
 
 function getSourceId(file: Blob): string {
@@ -57,14 +57,12 @@ function getSourceId(file: Blob): string {
 export function releaseMozJpegFile(file: Blob): void {
   if (!worker) return;
   const key = getSourceId(file);
-  worker.postMessage({ id: ++nextId, kind: 'release-source', key: `${key}:white` });
-  worker.postMessage({ id: ++nextId, kind: 'release-source', key: `${key}:alpha` });
-  worker.postMessage({ id: ++nextId, kind: 'release-source', key: `${key}:png` });
+  worker.postMessage({ id: ++nextId, kind: 'release-source', key });
 }
 
-export function encodeQuantizedPngFile(file: Blob, paletteColors: number, dithering: number, level = 3): Promise<ArrayBuffer> {
+export function encodeQuantizedPngFile(file: Blob, paletteColors: number, dithering: number, level = 3, scale = 100): Promise<ArrayBuffer> {
   const key = getSourceId(file);
-  return send({ kind: 'png-file', key: `${key}:png`, file, paletteColors, dithering, level }, []);
+  return send({ kind: 'png-file', key: `${key}:png:${scale}`, file, paletteColors, dithering, level, scale }, []);
 }
 
 export function optimizePng(bytes: ArrayBuffer, level = 3): Promise<ArrayBuffer> {

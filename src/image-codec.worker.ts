@@ -3,8 +3,8 @@ import { optimise } from '@jsquash/oxipng';
 
 type ImageJob =
   | { id: number; kind: 'jpeg'; width: number; height: number; pixels: Uint8ClampedArray; quality: number }
-  | { id: number; kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number; dithering: number }
-  | { id: number; kind: 'png-file'; key: string; file: Blob; paletteColors: number; dithering: number; level: number }
+  | { id: number; kind: 'jpeg-file'; key: string; file: Blob; quality: number; whiteBackground: boolean; paletteColors: number; dithering: number; scale: number }
+  | { id: number; kind: 'png-file'; key: string; file: Blob; paletteColors: number; dithering: number; level: number; scale: number }
   | { id: number; kind: 'release-source'; key: string }
   | { id: number; kind: 'png'; bytes: ArrayBuffer; level: number };
 
@@ -14,7 +14,7 @@ let jobQueue: Promise<void> = Promise.resolve();
 self.addEventListener('message', (event: MessageEvent<ImageJob>) => {
   const job = event.data;
   if (job.kind === 'release-source') {
-    imageCache.delete(job.key);
+    for (const key of imageCache.keys()) if (key.startsWith(`${job.key}:`)) imageCache.delete(key);
     return;
   }
   jobQueue = jobQueue.then(async () => {
@@ -25,12 +25,15 @@ self.addEventListener('message', (event: MessageEvent<ImageJob>) => {
         if (!imageData) {
           const bitmap = await createImageBitmap(job.file);
           try {
-            const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+            const scale = job.scale / 100;
+            const width = Math.max(1, Math.round(bitmap.width * scale));
+            const height = Math.max(1, Math.round(bitmap.height * scale));
+            const canvas = new OffscreenCanvas(width, height);
             const context = canvas.getContext('2d', { willReadFrequently: true });
             if (!context) throw new Error('Could not prepare the image preview.');
-            if (job.kind === 'jpeg-file' && job.whiteBackground) { context.fillStyle = '#fff'; context.fillRect(0, 0, bitmap.width, bitmap.height); }
-            context.drawImage(bitmap, 0, 0);
-            imageData = context.getImageData(0, 0, bitmap.width, bitmap.height);
+            if (job.kind === 'jpeg-file' && job.whiteBackground) { context.fillStyle = '#fff'; context.fillRect(0, 0, width, height); }
+            context.drawImage(bitmap, 0, 0, width, height);
+            imageData = context.getImageData(0, 0, width, height);
             imageCache.set(job.key, imageData);
             while (imageCache.size > 1) imageCache.delete(imageCache.keys().next().value as string);
           } finally { bitmap.close(); }

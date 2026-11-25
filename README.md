@@ -65,7 +65,7 @@ These engines are installed and used by the corresponding workflows. Their outpu
 
 | Tool(s) | Engine and behavior |
 | --- | --- |
-| Compress Image; Convert Photo to JPG | MozJPEG WebAssembly encoder for JPG/JPEG output, with quality and best-effort target-size controls. Compress Image can also produce palette-optimized PNG while preserving transparency. Browser-decodable formats only; HEIC/HEIF is not included. |
+| Compress Image; Convert Photo to JPG | MozJPEG WebAssembly encoder for JPG/JPEG output, with quality, output-scale, and best-effort target-size controls. Compress Image can also produce palette-optimized PNG while preserving transparency. Browser-decodable formats only; HEIC/HEIF is not included. |
 | Reduce PDF File Size | A separate Ghostscript 10.08.0 WebAssembly component uses `pdfwrite` to recompress the document and downsample images at a user-selected resolution/quality. This is lossy and may change document internals, forms, annotations, or metadata. Files with digital signatures are rejected; files may not shrink if already optimized. |
 | Change Signature Width & Height; Change Photo Width & Height | Pica resize to the requested pixel dimensions; output is PNG. |
 | Make PDF from Photos; Merge PDF Files; Split PDF; Delete PDF Pages; Sign PDF placement; Put Many Pages on One Page | pdf-lib creates/edits pages and embeds signature images. Split exports selected pages in a ZIP. “Sign PDF” places an image and does not create a cryptographic PDF signature. |

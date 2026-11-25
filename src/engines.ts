@@ -101,13 +101,14 @@ async function mozJpeg(canvas: HTMLCanvasElement, quality: number): Promise<Arra
   return encodeMozJpeg(context.getImageData(0, 0, canvas.width, canvas.height), quality);
 }
 
-function mozJpegFile(file: File, quality: number, whiteBackground = false, paletteColors = 256, dithering = 0.48): Promise<ArrayBuffer> {
-  return encodeMozJpegFile(file, quality, whiteBackground, paletteColors, dithering);
+function mozJpegFile(file: File, quality: number, whiteBackground = false, paletteColors = 256, dithering = 0.48, scale = 100): Promise<ArrayBuffer> {
+  return encodeMozJpegFile(file, quality, whiteBackground, paletteColors, dithering, scale);
 }
 
 async function compressImage(file: File, form: HTMLFormElement, report: RunInput['report']): Promise<EngineOutput> {
   const stem = safeStem(file.name);
   const outputFormat = value(form, 'outputFormat', 'jpg');
+  const scale = Math.max(10, Math.min(100, numberValue(form, 'scalePercent', 100)));
   if (outputFormat === 'png') {
     const targetKb = Number(value(form, 'targetKb', '0'));
     const targetBytes = targetKb > 0 ? targetKb * 1024 : 0;
@@ -118,7 +119,7 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
       ? 'Optimizing the PNG with up to 256 colors and preserving transparency…'
       : `Reducing the PNG palette to ${requestedColors} colors…`);
 
-    let best = await encodeQuantizedPngFile(file, requestedColors, dithering, compressionLevel);
+    let best = await encodeQuantizedPngFile(file, requestedColors, dithering, compressionLevel, scale);
     let selectedColors = requestedColors;
     let smallest = { bytes: best, colors: requestedColors };
     let fit: { bytes: ArrayBuffer; colors: number } | undefined = targetBytes && best.byteLength <= targetBytes
@@ -131,7 +132,7 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
         const midpoint = Math.round(((low + high) / 2) / 8) * 8;
         const colors = Math.max(low, Math.min(high, midpoint));
         const candidateColors = Math.max(8, Math.min(256, Math.round(colors / 8) * 8));
-        const bytes = await encodeQuantizedPngFile(file, candidateColors, dithering, compressionLevel);
+        const bytes = await encodeQuantizedPngFile(file, candidateColors, dithering, compressionLevel, scale);
         if (bytes.byteLength < smallest.bytes.byteLength) smallest = { bytes, colors: candidateColors };
         if (bytes.byteLength <= targetBytes) {
           if (!fit || candidateColors > fit.colors) fit = { bytes, colors: candidateColors };
@@ -154,7 +155,7 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
   const dithering = Number(value(form, 'dithering', '0.48'));
   const startQuality = Number(value(form, 'quality', '82')) / 100;
   report(targetKb > 0 ? 'Finding a quality close to your target…' : 'Encoding a compact JPEG in your browser…');
-  let best = await mozJpegFile(file, startQuality, whiteBackground, paletteColors, dithering);
+  let best = await mozJpegFile(file, startQuality, whiteBackground, paletteColors, dithering, scale);
   let selectedQuality = startQuality;
   if (targetKb > 0) {
     const targetBytes = targetKb * 1024;
@@ -173,7 +174,7 @@ async function compressImage(file: File, form: HTMLFormElement, report: RunInput
     for (let attempt = 0; !alreadyClose && attempt < 2; attempt++) {
       if (Math.abs(candidate - previousQuality) < 0.005) candidate = (lower + upper) / 2;
       if (Math.abs(candidate - previousQuality) < 0.005) break;
-      const bytes = await mozJpegFile(file, candidate, whiteBackground, paletteColors, dithering);
+      const bytes = await mozJpegFile(file, candidate, whiteBackground, paletteColors, dithering, scale);
       if (bytes.byteLength < smallest.bytes.byteLength) smallest = { bytes, quality: candidate };
       if (bytes.byteLength <= targetBytes) {
         if (!fit || candidate > fit.quality) fit = { bytes, quality: candidate };
