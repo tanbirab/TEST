@@ -126,8 +126,8 @@ function workflowMarkup(tool: Tool): string {
     return `<div class="photo-compressor">
     <label class="photo-dropzone" for="sourceFiles"><span class="photo-upload-icon" aria-hidden="true">↥</span><strong>Drop an image here</strong><span class="photo-drop-help">Photos, signatures, and other images · JPG, PNG or WebP · up to 100 MB</span><span class="photo-browse">Browse files</span><input id="sourceFiles" name="sourceFiles" type="file" accept="image/*" required></label>
     <div class="photo-file-row" id="photoFileRow" hidden><span class="photo-file-mark" aria-hidden="true"></span><span class="photo-file-meta"><strong id="photoFileName"></strong><small id="photoFileDetails"></small></span><button class="photo-remove" id="photoRemove" type="button">Remove</button></div>
-    <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality"><span id="qualityLabel">JPEG quality</span> <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"><small id="targetReduction">Enter a target size to see the reduction it requires.</small></div><div class="engine-field"><label for="targetKb">Target size <span class="photo-unit">KB · optional</span></label><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
-    <output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a ${imageLabel} to start.</output>
+    <section class="target-size-feature" aria-labelledby="targetSizeTitle"><div class="target-size-heading"><div><h3 id="targetSizeTitle">Target file size</h3><p>Set the output size you need. We’ll tune compression to get as close as possible.</p></div><span class="target-size-badge">MAIN CONTROL</span></div><label for="targetKb">Desired size <span class="photo-unit">optional</span></label><div class="target-size-input"><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 500" aria-describedby="targetSizeHelp sizeEstimate"><span aria-hidden="true">KB</span></div><small id="targetSizeHelp">Leave blank to set quality and color controls yourself.</small><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose an image to see the estimated compressed size.</output><p id="targetReduction" class="target-reduction" aria-live="polite">Your target updates the quality or palette automatically.</p></section>
+    <details class="photo-fine-tune" open><summary>Fine-tune</summary><div class="photo-fine-tune-body"><div class="engine-field"><label for="quality"><span id="qualityLabel">JPEG quality</span> <output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"></div><div class="engine-field"><label for="paletteColors">Color palette <output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div><div class="engine-field"><label for="dithering">Dithering <output id="ditheringValue" for="dithering">0.48</output></label><input id="dithering" name="dithering" type="range" min="0" max="1" step="0.01" value="0.48"><small>Adds texture to smooth out color bands.</small></div></div></details>
     <div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a ${imageLabel} to see the original and compressed versions.</small></div></div>
     <div class="compression-summary"><div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div>
     <section class="compression-levels" aria-labelledby="compressionLevelTitle"><h3 id="compressionLevelTitle">Compression level</h3><div class="compression-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" data-png-colors="64" aria-pressed="false"><strong>Small</strong><span>More reduction</span></button><button type="button" data-quality="72" data-png-colors="128" aria-pressed="true"><strong>Balanced</strong><span>Recommended</span></button><button type="button" data-quality="90" data-png-colors="256" aria-pressed="false"><strong>Best</strong><span>Higher quality</span></button></div></section><div class="engine-field output-name-field"><label for="outputName">Download filename</label><div class="output-name-control"><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed-image">${formatSelector}</div></div></div>
@@ -254,8 +254,8 @@ function openTool(tool: Tool, navigate = true): void {
     const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
     if (paletteValue && palette) paletteValue.value = isPng ? `${palette.value} colors` : palette.value === '256' ? 'Full color' : `${palette.value} colors`;
     if (targetReduction) targetReduction.textContent = isPng
-      ? 'PNG keeps transparency. Target size adjusts the color palette.'
-      : 'Enter a target size to see the required reduction.';
+      ? 'PNG transparency is preserved; target size adjusts the color palette.'
+      : 'Target size adjusts JPEG quality automatically.';
     if (formatLabel) formatLabel.textContent = selectedOption.text;
     if (formatTrigger) formatTrigger.setAttribute('aria-label', `Download format: ${selectedOption.text}`);
     fields.querySelectorAll<HTMLInputElement>('input[name="outputFormatChoice"]').forEach((choice) => { choice.checked = choice.value === outputFormat.value; });
@@ -458,8 +458,8 @@ function updateTargetReduction(): void {
   const target = Number(field.value);
   if (!field.value || !Number.isFinite(target) || target <= 0) {
     note.textContent = pngMode
-      ? 'PNG keeps transparency. Compression effort, palette, dithering, and target size all work.'
-      : 'Enter a target size to see the required reduction.';
+      ? 'PNG transparency is preserved. Set a target size to adjust the palette automatically.'
+      : 'Set a target size to adjust JPEG quality automatically.';
     return;
   }
   const file = (toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null)?.files?.[0];
@@ -467,7 +467,7 @@ function updateTargetReduction(): void {
   const reduction = Math.max(0, Math.min(100, (1 - target * 1024 / file.size) * 100));
   note.textContent = reduction === 0
     ? `Your ${target} KB target is already larger than this file.`
-    : `Your ${target} KB target requires about ${Math.ceil(reduction)}% size reduction.${pngMode ? ' The palette adjusts automatically.' : ''}`;
+    : `About ${Math.ceil(reduction)}% reduction needed to reach ${target} KB. ${pngMode ? 'The palette adjusts automatically.' : 'Quality adjusts automatically.'}`;
 }
 
 function adjustQualityForTarget(): void {
