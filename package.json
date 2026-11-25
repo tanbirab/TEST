@@ -5,9 +5,10 @@
   "packageManager": "pnpm@11.25.0",
   "type": "module",
   "scripts": {
-    "prebuild": "node scripts/write-third-party-notices.mjs",
-    "predev": "node scripts/write-third-party-notices.mjs",
+    "prebuild": "node scripts/build-wasm.mjs && node scripts/write-third-party-notices.mjs",
+    "predev": "node scripts/build-wasm.mjs && node scripts/write-third-party-notices.mjs",
     "dev": "vite",
+    "build:wasm": "node scripts/build-wasm.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
@@ -17,15 +18,6 @@
     "wrangler": "^4.166.0"
   },
   "dependencies": {
-    "@jsquash/jpeg": "^1.6.0",
-    "@jsquash/oxipng": "^2.3.0",
-    "@wasm-zoo/ghostscript": "^0.7.2",
-    "asn1js": "^4.1.0",
-    "cropperjs": "1.6.2",
-    "fflate": "^0.8.3",
-    "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.5.438",
-    "pica": "^10.0.3",
-    "pkijs": "^4.0.1"
+    "cropperjs": "1.6.2"
   }
 }

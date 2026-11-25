@@ -1,7 +1,6 @@
 import type Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 import { downloadOutputs, runEngine, type EngineOutput } from './engines';
-import { releaseMozJpegFile } from './image-codec';
 import icon01 from './assets/icons/01-reduce-photo-file-size.svg?raw';
 import icon02 from './assets/icons/02-reduce-pdf-file-size.svg?raw';
 import icon04 from './assets/icons/04-change-signature-width-height.svg?raw';
@@ -64,6 +63,8 @@ let estimateInFlight = false;
 let estimateQueued = false;
 let targetQualityBaseline: { file: File; quality: number; bytes: number } | undefined;
 let targetPaletteBaseline: { file: File; paletteColors: number; bytes: number } | undefined;
+let targetSyncSource: 'target' | 'sliders' = 'sliders';
+let adjustingSliderFromTarget = false;
 let pendingPhotoDownload = false;
 
 function isPngCompressionSelected(): boolean {
@@ -73,10 +74,6 @@ function isPngCompressionSelected(): boolean {
 
 function isCompressImageTool(name = activeTool?.name): boolean {
   return name === 'Compress Image';
-}
-
-function pngCompressionLevel(quality: number): number {
-  return Math.max(1, Math.min(4, 1 + Math.round((quality - 15) / 27)));
 }
 
 function renderTools(): void {
@@ -124,17 +121,17 @@ function workflowMarkup(tool: Tool): string {
       <div class="target-format-row"><div class="engine-field target-compact-field"><label for="targetKb">Target size <span>KB · optional</span></label><div class="target-size-input"><input id="targetKb" name="targetKb" type="number" min="1" placeholder="e.g. 100"><span aria-hidden="true">KB</span></div></div><div class="engine-field format-compact-field"><label for="outputFormat">Format</label>${formatSelector}</div></div>
       <output id="sizeEstimate" class="size-estimate" aria-live="polite" hidden></output>
       <div class="compression-presets compact-presets" role="group" aria-label="Compression level"><button type="button" data-quality="45" data-png-colors="64" aria-pressed="false">Small</button><button type="button" data-quality="72" data-png-colors="128" aria-pressed="true">Balanced</button><button type="button" data-quality="90" data-png-colors="256" aria-pressed="false">Best</button></div>
-      <div class="primary-image-controls"><div class="engine-field compact-range"><label for="quality"><span id="qualityLabel">Quality</span><output id="qualityValue" for="quality">72%</output></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"></div><div class="engine-field compact-range"><label for="paletteColors"><span>Color palette</span><output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div></div>
+      <div class="primary-image-controls"><div class="engine-field compact-range"><label for="quality"><span id="qualityLabel">JPEG quality</span></label><input id="quality" name="quality" type="range" min="15" max="95" value="72"></div><div class="engine-field compact-range"><label for="paletteColors"><span>Color palette</span><output id="paletteValue" for="paletteColors">Full color</output></label><input id="paletteColors" name="paletteColors" type="range" min="8" max="256" step="8" value="256"><small>Fewer colors create a smaller image.</small></div></div>
       <div class="photo-download-row"><div class="engine-field output-name-field"><label for="outputName">File name</label><input id="outputName" name="outputName" type="text" maxlength="100" placeholder="compressed"></div></div>
     </div><div class="compress-preview-column"><div id="filePreview" class="file-preview"><div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your before and after preview appears here.</strong></div></div><div class="compression-stats" aria-live="polite"><div><small>Original</small><strong id="originalSize">—</strong></div><div class="compression-result"><small>Compressed</small><strong id="compressedSize">—</strong></div><div class="compression-saved"><small>Saved</small><strong id="savedPercent">—</strong></div></div></div></div>`;
   }
   if (name === 'Change Photo Width & Height' || name === 'Change Signature Width & Height') return `${fileInput(name.includes('Signature') ? 'Choose a signature image' : 'Choose a photo', 'image/*')}${numericField('width', 'Width (pixels)', 800)}${numericField('height', 'Height (pixels)', 600)}<div id="filePreview" class="file-preview"></div>`;
-  if (name === 'Convert Photo to JPG') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality <output id="qualityValue" for="quality">90%</output></label><input id="quality" name="quality" type="range" min="20" max="100" value="90"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to preview the conversion.</output><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Convert Photo to JPG') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="quality">JPEG quality</label><input id="quality" name="quality" type="range" min="20" max="100" value="90"></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a photo to preview the conversion.</output><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Crop Photo') return `${fileInput('Choose a photo', 'image/*')}<p class="engine-hint">Drag the crop handles in the preview, then choose Crop photo.</p><div id="filePreview" class="file-preview crop-preview"></div>`;
   if (name === 'Make Passport Size Photo') return `${fileInput('Choose a photo', 'image/*')}${numericField('widthMm', 'Print width (mm)', 35)}${numericField('heightMm', 'Print height (mm)', 45)}<p class="engine-hint">Exports one photo at 300 DPI using the dimensions above.</p><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Add Name & Date on Photo') return `${fileInput('Choose a photo', 'image/*')}<div class="engine-field"><label for="photoName">Name (optional)</label><input id="photoName" name="photoName" maxlength="120"></div><div class="engine-field"><label for="photoDate">Date (optional)</label><input id="photoDate" name="photoDate" type="date"></div><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Make PDF from Photos') return `${fileInput('Choose photos', 'image/*', true)}<div id="filePreview" class="file-preview"></div>`;
-  if (name === 'Reduce PDF File Size') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}<div class="engine-field"><label for="pdfQuality">Image quality <output id="qualityValue" for="pdfQuality">60%</output></label><input id="pdfQuality" name="pdfQuality" type="range" min="35" max="95" value="60"><small>Lower quality reduces image resolution more. The preview runs the same local compression as the final file.</small></div><output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a PDF to estimate the output size.</output><p class="engine-hint">Uses Ghostscript locally. Signed PDFs are left untouched because rewriting invalidates digital signatures.</p><div id="filePreview" class="file-preview"></div>`;
+  if (name === 'Reduce PDF File Size') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}<output id="sizeEstimate" class="size-estimate" aria-live="polite">Choose a PDF to estimate the output size.</output><p class="engine-hint">Uses lossless structural optimization in Rust. Embedded images are not resampled, so already optimized PDFs may not shrink. Signed PDFs are left untouched because rewriting invalidates digital signatures.</p><div id="filePreview" class="file-preview"></div>`;
   if (name === 'Merge PDF Files') return `${fileInput('Choose PDFs to merge', 'application/pdf,.pdf', true)}<div id="filePreview" class="file-preview"></div>`;
   if (name === 'Split PDF' || name === 'Delete PDF Pages') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}${pageField(name === 'Split PDF' ? 'Pages to extract' : 'Pages to delete')}<div id="filePreview" class="file-preview"></div>`;
   if (name === 'Convert PDF to JPG') return `${fileInput('Choose a PDF', 'application/pdf,.pdf')}${pageField('Pages to convert (optional)')}<div class="engine-field"><label for="quality">JPEG quality</label><input id="quality" name="quality" type="range" min="30" max="100" value="88"></div><div id="filePreview" class="file-preview"></div>`;
@@ -146,7 +143,7 @@ function workflowMarkup(tool: Tool): string {
 
 function openTool(tool: Tool, navigate = true): void {
   if (submit.parentElement !== toolForm) toolForm.append(submit);
-  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; targetQualityBaseline = undefined; targetPaletteBaseline = undefined; pendingPhotoDownload = false; window.clearTimeout(estimateTimer); estimateVersion += 1;
+  releasePreview(); activeTool = tool; cropper = undefined; toolForm.reset(); toolForm.dataset.crop = ''; estimateCache = undefined; targetQualityBaseline = undefined; targetPaletteBaseline = undefined; targetSyncSource = 'sliders'; adjustingSliderFromTarget = false; pendingPhotoDownload = false; window.clearTimeout(estimateTimer); estimateVersion += 1;
   dialogTitle.textContent = tool.name;
   dialogIcon.innerHTML = inlineIcon(tool.icon, 'dialog');
   dialogDescription.textContent = tool.description;
@@ -170,6 +167,12 @@ function openTool(tool: Tool, navigate = true): void {
   const fileInputElement = toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null;
   fileInputElement?.addEventListener('change', () => {
     const selectedFile = fileInputElement.files?.[0];
+    if (targetSyncSource === 'sliders') {
+      const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
+      if (target) target.value = '';
+    }
+    targetQualityBaseline = undefined;
+    targetPaletteBaseline = undefined;
     const format = fields.querySelector<HTMLSelectElement>('#outputFormat');
     if (isImageCompressor && selectedFile && format) {
       const preferredFormat = selectedFile.type === 'image/png' || selectedFile.name.toLowerCase().endsWith('.png') ? 'png' : 'jpg';
@@ -183,14 +186,25 @@ function openTool(tool: Tool, navigate = true): void {
   });
   fields.querySelectorAll<HTMLInputElement>('input[type="range"], input[type="number"]').forEach((input) => {
     input.addEventListener('input', () => {
-      const out = fields.querySelector<HTMLOutputElement>('#qualityValue');
       const paletteOut = fields.querySelector<HTMLOutputElement>('#paletteValue');
-      if (input.name === 'quality' && out) {
+      if (input.name === 'quality' && !adjustingSliderFromTarget) {
+        targetSyncSource = 'sliders';
+        const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
+        if (target) target.value = '';
+        targetQualityBaseline = undefined;
+        targetPaletteBaseline = undefined;
+      }
+      if (input.name === 'paletteColors' && !adjustingSliderFromTarget) {
+        targetSyncSource = 'sliders';
+        const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
+        if (target) target.value = '';
+        targetQualityBaseline = undefined;
+        targetPaletteBaseline = undefined;
+      }
+      if (input.name === 'quality') {
         const pngMode = isPngCompressionSelected();
         const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
-        if (qualityLabel) qualityLabel.textContent = 'Quality';
-        out.value = pngMode ? `Level ${pngCompressionLevel(Number(input.value))}/4` : `${input.value}%`;
-        input.setAttribute('aria-valuetext', pngMode ? `Compression level ${pngCompressionLevel(Number(input.value))} of 4` : `${input.value} percent quality`);
+        if (qualityLabel) qualityLabel.textContent = pngMode ? 'PNG compression effort' : 'JPEG quality';
       }
       if (input.name === 'quality') {
         const paletteValue = (toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null)?.value;
@@ -201,7 +215,7 @@ function openTool(tool: Tool, navigate = true): void {
           button.setAttribute('aria-pressed', String(selected));
         });
       }
-      if (input.name === 'paletteColors' && paletteOut) { paletteOut.value = input.value === '256' && !isPngCompressionSelected() ? 'Full color' : `${input.value} colors`; input.setAttribute('aria-valuetext', paletteOut.value); }
+      if (input.name === 'paletteColors' && paletteOut) { paletteOut.value = input.value === '256' ? (isPngCompressionSelected() ? 'Original colors' : 'Full color') : `${input.value} colors`; input.setAttribute('aria-valuetext', paletteOut.value); }
       if (input.name === 'paletteColors' && isPngCompressionSelected()) {
         const qualityValue = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
         fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => {
@@ -213,6 +227,7 @@ function openTool(tool: Tool, navigate = true): void {
       const ditheringInput = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
       if (input.name === 'paletteColors' && ditheringInput) ditheringInput.disabled = input.value === '256' && !isPngCompressionSelected();
       if (input.name === 'targetKb') {
+        targetSyncSource = 'target';
         if (isPngCompressionSelected()) adjustPaletteForTarget();
         else adjustQualityForTarget();
         requestEstimate();
@@ -231,17 +246,15 @@ function openTool(tool: Tool, navigate = true): void {
     const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
     const palette = toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null;
     const dithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
-    const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
     const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
     if (quality) quality.disabled = false;
     if (target) target.disabled = false;
     if (palette) palette.disabled = false;
     if (dithering) dithering.disabled = !isPng && palette?.value === '256';
     fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = false; });
-    if (qualityLabel) qualityLabel.textContent = 'Quality';
-    if (qualityValue && quality) qualityValue.value = isPng ? `Level ${pngCompressionLevel(Number(quality.value))}/4` : `${quality.value}%`;
+    if (qualityLabel) qualityLabel.textContent = isPng ? 'PNG compression effort' : 'JPEG quality';
     const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
-    if (paletteValue && palette) paletteValue.value = isPng ? `${palette.value} colors` : palette.value === '256' ? 'Full color' : `${palette.value} colors`;
+    if (paletteValue && palette) paletteValue.value = palette.value === '256' ? (isPng ? 'Original colors' : 'Full color') : `${palette.value} colors`;
   };
   outputFormat?.addEventListener('change', () => { updateOutputFormat(); requestEstimate(); });
   updateOutputFormat();
@@ -261,7 +274,6 @@ function openTool(tool: Tool, navigate = true): void {
     const quality = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
     if (!quality) return;
     quality.value = button.dataset.quality ?? '72';
-    fields.querySelector<HTMLOutputElement>('#qualityValue')!.value = `${quality.value}%`;
     fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((preset) => preset.setAttribute('aria-pressed', String(preset === button)));
     requestEstimate();
   }));
@@ -282,7 +294,9 @@ function openTool(tool: Tool, navigate = true): void {
 function clearPhotoSelection(): void {
   const input = toolForm.elements.namedItem('sourceFiles') as HTMLInputElement | null;
   if (input) input.value = '';
-  releasePreview(); estimateCache = undefined; targetPaletteBaseline = undefined; estimateVersion += 1; window.clearTimeout(estimateTimer);
+  const target = toolForm.elements.namedItem('targetKb') as HTMLInputElement | null;
+  if (target) target.value = '';
+  releasePreview(); estimateCache = undefined; targetQualityBaseline = undefined; targetPaletteBaseline = undefined; targetSyncSource = 'sliders'; estimateVersion += 1; window.clearTimeout(estimateTimer);
   fields.querySelector<HTMLElement>('#photoFileRow')?.setAttribute('hidden', '');
   const imageKind = 'image';
   fields.querySelector<HTMLDivElement>('#filePreview')!.innerHTML = `<div class="photo-preview-empty"><span aria-hidden="true">↔</span><strong>Your comparison preview will appear here</strong><small>Choose a ${imageKind} to see the original and compressed versions.</small></div>`;
@@ -298,10 +312,8 @@ function clearPhotoSelection(): void {
     if (control) control.disabled = name === 'dithering' && (toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null)?.value === '256';
   }
   fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => { button.disabled = false; });
-  const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
   const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
-  if (qualityLabel) qualityLabel.textContent = 'Quality';
-  if (qualityValue && quality) qualityValue.value = `${quality.value}%`;
+  if (qualityLabel) qualityLabel.textContent = isPngCompressionSelected() ? 'PNG compression effort' : 'JPEG quality';
   submit.disabled = true; submit.textContent = 'Choose an image first';
 }
 
@@ -369,10 +381,8 @@ async function showSelectedFiles(files: File[]): Promise<void> {
   if (quality) {
     const pngMode = isPngCompressionSelected();
     quality.disabled = false;
-    const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
     const qualityLabel = fields.querySelector<HTMLElement>('#qualityLabel');
-    if (qualityLabel) qualityLabel.textContent = 'Quality';
-    if (qualityValue) qualityValue.value = pngMode ? `Level ${pngCompressionLevel(Number(quality.value))}/4` : `${quality.value}%`;
+    if (qualityLabel) qualityLabel.textContent = pngMode ? 'PNG compression effort' : 'JPEG quality';
     for (const name of ['targetKb', 'paletteColors', 'dithering']) {
       const control = toolForm.elements.namedItem(name) as HTMLInputElement | null;
       if (control) control.disabled = name === 'dithering' && !pngMode
@@ -382,7 +392,7 @@ async function showSelectedFiles(files: File[]): Promise<void> {
     const selectedPalette = (toolForm.elements.namedItem('paletteColors') as HTMLInputElement | null)?.value;
     if (pngMode && selectedPalette) {
       const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
-      if (paletteValue) paletteValue.value = `${selectedPalette} colors`;
+      if (paletteValue) paletteValue.value = selectedPalette === '256' ? 'Original colors' : `${selectedPalette} colors`;
       const dithering = toolForm.elements.namedItem('dithering') as HTMLInputElement | null;
       if (dithering) dithering.disabled = false;
       fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => {
@@ -435,7 +445,9 @@ function adjustQualityForTarget(): void {
   const guess = Math.round(targetQualityBaseline.quality * Math.sqrt(targetBytes / Math.max(1, targetQualityBaseline.bytes)));
   const adjusted = Math.max(Number(quality.min), Math.min(Number(quality.max), guess));
   quality.value = String(adjusted);
+  adjustingSliderFromTarget = true;
   quality.dispatchEvent(new Event('input', { bubbles: true }));
+  adjustingSliderFromTarget = false;
   const approximateBytes = Math.min(targetBytes, file.size);
   const compressedSize = fields.querySelector<HTMLElement>('#compressedSize');
   const savedPercent = fields.querySelector<HTMLElement>('#savedPercent');
@@ -465,7 +477,9 @@ function adjustPaletteForTarget(): void {
   const scale = Math.sqrt(targetBytes / Math.max(1, targetPaletteBaseline.bytes));
   const guess = Math.round(targetPaletteBaseline.paletteColors * scale / 8) * 8;
   palette.value = String(Math.max(Number(palette.min), Math.min(Number(palette.max), guess)));
+  adjustingSliderFromTarget = true;
   palette.dispatchEvent(new Event('input', { bubbles: true }));
+  adjustingSliderFromTarget = false;
   const estimate = fields.querySelector<HTMLOutputElement>('#sizeEstimate');
   if (estimate) estimate.value = `Adjusting the PNG palette for your ${formatBytes(targetBytes)} target…`;
   submit.textContent = 'Download';
@@ -533,8 +547,10 @@ function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOu
   if (compressedSize) compressedSize.textContent = formatBytes(bytes);
   if (savedPercent) savedPercent.textContent = bytes < file.size ? `${ratio}%` : '0%';
   const target = fields.querySelector<HTMLInputElement>('#targetKb');
+  if (target && isCompressImageTool() && targetSyncSource === 'sliders') {
+    target.value = String(Math.max(1, Math.round(bytes / 1024)));
+  }
   const quality = fields.querySelector<HTMLInputElement>('#quality');
-  const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
   const selectedQuality = outputs[0]?.quality;
   if (selectedQuality !== undefined) targetQualityBaseline = { file, quality: selectedQuality, bytes: outputs[0].blob.size };
   const selectedPalette = outputs[0]?.paletteColors;
@@ -543,20 +559,14 @@ function showEstimate(estimate: HTMLOutputElement, file: File, outputs: EngineOu
     const palette = fields.querySelector<HTMLInputElement>('#paletteColors');
     const paletteValue = fields.querySelector<HTMLOutputElement>('#paletteValue');
     if (palette) palette.value = String(selectedPalette);
-    if (paletteValue) paletteValue.value = `${selectedPalette} colors`;
+    if (paletteValue) paletteValue.value = selectedPalette === 256 ? 'Original colors' : `${selectedPalette} colors`;
     const pngEffort = toolForm.elements.namedItem('quality') as HTMLInputElement | null;
     fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.pngColors === String(selectedPalette) && button.dataset.quality === pngEffort?.value));
     });
   }
-  if (outputs[0]?.compressionLevel !== undefined && isPngCompressionSelected()) {
-    const qualityValue = fields.querySelector<HTMLOutputElement>('#qualityValue');
-    if (qualityValue) qualityValue.value = `Level ${outputs[0].compressionLevel}/4`;
-  }
   if (target?.value && selectedQuality !== undefined && quality) {
     quality.value = String(selectedQuality);
-    quality.setAttribute('aria-valuetext', `${selectedQuality} percent quality`);
-    if (qualityValue) qualityValue.value = `${selectedQuality}%`;
     fields.querySelectorAll<HTMLButtonElement>('.compression-presets button').forEach((button) => {
       button.setAttribute('aria-pressed', String(button.dataset.quality === String(selectedQuality)));
     });
@@ -592,7 +602,6 @@ function renderComparison(file: File, output?: EngineOutput): void {
 
 function releasePreview(): void {
   cropper?.destroy(); cropper = undefined;
-  if (previewFile) releaseMozJpegFile(previewFile);
   previewFile = undefined;
   if (previewUrl) URL.revokeObjectURL(previewUrl);
   if (outputPreviewUrl) URL.revokeObjectURL(outputPreviewUrl);

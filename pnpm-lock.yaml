@@ -8,36 +8,9 @@ importers:
 
   .:
     dependencies:
-      '@jsquash/jpeg':
-        specifier: ^1.6.0
-        version: 1.6.0
-      '@jsquash/oxipng':
-        specifier: ^2.3.0
-        version: 2.3.0
-      '@wasm-zoo/ghostscript':
-        specifier: ^0.7.2
-        version: 0.7.2
-      asn1js:
-        specifier: ^4.1.0
-        version: 4.1.0
       cropperjs:
         specifier: 1.6.2
         version: 1.6.2
-      fflate:
-        specifier: ^0.8.3
-        version: 0.8.3
-      pdf-lib:
-        specifier: ^1.17.1
-        version: 1.17.1
-      pdfjs-dist:
-        specifier: ^6.5.438
-        version: 6.5.438
-      pica:
-        specifier: ^10.0.3
-        version: 10.0.3
-      pkijs:
-        specifier: ^4.0.1
-        version: 4.0.1(asn1js@4.1.0)
     devDependencies:
       typescript:
         specifier: ^7.0.2

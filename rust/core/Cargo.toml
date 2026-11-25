@@ -9,4 +9,21 @@ license = "UNLICENSED"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+font8x8 = "0.3"
+hayro = "0.9"
+image = { version = "0.25", default-features = false, features = ["gif", "jpeg", "png", "webp"] }
+js-sys = "0.3"
+lopdf = { version = "0.47", default-features = false, features = ["embed_image", "wasm_js"] }
+serde = { version = "1", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+underskrift = { version = "0.1.4", default-features = false, features = ["inspect", "verify", "tsp"] }
+tsp-ltv = { path = "../vendor/tsp-ltv", default-features = false, features = ["tsp"] }
 wasm-bindgen = "0.2"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[patch.crates-io]
+tsp-ltv = { path = "../vendor/tsp-ltv" }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
+getrandom_03 = { package = "getrandom", version = "0.3", features = ["wasm_js"] }
